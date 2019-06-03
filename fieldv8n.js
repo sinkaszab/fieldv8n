@@ -1,3 +1,5 @@
+const compose = (...fns) => x => fns.reduceRight((y, f) => f(y), x);
+
 const Validator = ({ type, method, init }) => value => ({
   get type() {
     return type;
@@ -18,16 +20,44 @@ const fieldv8n = (() => {
       return this;
     },
     compose() {
+      const fork = { ...this };
       const handlers = {
-        get(_, key, context) {
-          if (validators[key]) {
-            // TODO: Add validator to stack.
-            console.log(key);
+        get(target, key, context) {
+          const newValidator = validators[key];
+
+          // FIXME: would be nice to drop a validation
+          // registered earlier in a chain.
+          // if (
+          //   newValidator &&
+          //   target.registeredTypes &&
+          //   target.registeredTypes.has(newValidator.type)
+          // ) {
+          //   return context;
+          // }
+
+          if (newValidator) {
+            // FIXME: Validators should be wrapped into Functors on compose.
+            if (!target.validate) {
+              target.validate = newValidator;
+            } else {
+              target.validate = compose(
+                target.validate,
+                newValidator
+              );
+            }
+
+            // if (!target.registeredTypes) {
+            //   target.registeredTypes = new Set([newValidator.type]);
+            // } else {
+            //   target.registeredTypes.add(newValidator);
+            // }
+
             return context;
           }
+          return Reflect.get(target, key, context);
         }
       };
-      return new Proxy(this, handlers);
+      return new Proxy(fork, handlers);
     }
   };
 })();
@@ -45,4 +75,12 @@ fieldv8n.registerValidator({
   init: true
 });
 
-console.log(fieldv8n.compose().string.min);
+const chain1 = fieldv8n.compose().string.min;
+
+console.log(chain1);
+
+const chain2 = chain1.compose().string;
+
+console.log(chain2);
+
+console.log(chain2.validate("hello"));
