@@ -1,22 +1,48 @@
-const blockList = [/^compose$/i, /^register$/i];
-
-const v8n = {
-  validations: [],
-  compose() {
-    const fork = Object.create(this);
-    return fork;
+const Validator = ({ type, method, init }) => value => ({
+  get type() {
+    return type;
   },
-  register(name) {
-    const trimmedName = name.trim();
-    if (blockList.find(pattern => pattern.test(trimmedName))) {
-      throw new Error(`"${trimmedName}" is not allowed`);
-    }
-    // TODO: Register custom validation (globally).
-    // Do we need a local register solution?!
+  init(initVal) {
+    this.validate = async () => await method(initVal)(value);
     return this;
-  }
-};
+  },
+  validate: async () => await method(value)
+});
 
-const nameField = v8n.compose();
+const fieldv8n = (() => {
+  const validators = {};
 
-console.log(nameField);
+  return {
+    registerValidator({ name, type, method, init }) {
+      validators[name] = Validator({ type, method });
+      return this;
+    },
+    compose() {
+      const handlers = {
+        get(_, key, context) {
+          if (validators[key]) {
+            // TODO: Add validator to stack.
+            console.log(key);
+            return context;
+          }
+        }
+      };
+      return new Proxy(this, handlers);
+    }
+  };
+})();
+
+fieldv8n.registerValidator({
+  name: "string",
+  type: "IS_STRING",
+  method: value => Object.prototype.toString.call(value) === "[object String]"
+});
+
+fieldv8n.registerValidator({
+  name: "min",
+  type: "MIN_LENGTH",
+  method: init => value => value >= init.length,
+  init: true
+});
+
+console.log(fieldv8n.compose().string.min);
