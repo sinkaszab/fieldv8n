@@ -11,11 +11,13 @@ const Validator = ({ type, method, init }) => value => ({
   validate: async () => await method(value)
 });
 
+// TODO: create a safe mode with fail guarantees in dev environments.
 const fieldv8n = (() => {
   const validators = {};
 
   return {
     registerValidator({ name, type, method, init }) {
+      // TODO: throw in safeMode when trying to overwrite an existing validator.
       validators[name] = Validator({ type, method });
       return this;
     },
