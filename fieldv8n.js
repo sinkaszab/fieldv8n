@@ -1,88 +1,137 @@
-const compose = (...fns) => x => fns.reduceRight((y, f) => f(y), x);
+const asyncCompose = (...fns) => x =>
+  fns.reduceRight(async (y, f) => f(await y), x);
 
-const Validator = ({ type, method, init }) => value => ({
+const Validator = ({ type, method }) => value => ({
   get type() {
     return type;
   },
-  init(initVal) {
-    this.validate = async () => await method(initVal)(value);
+  get value() {
+    return value;
+  },
+  validate: () => method(value)
+});
+
+const InitableValidator = ({ type, method }) => initVal => value => ({
+  get type() {
+    return type;
+  },
+  get value() {
+    return value;
+  },
+  validate: () => method(initVal)(value)
+});
+
+const SetInitalValue = value => ({
+  get type() {
+    return "IS_VALUE";
+  },
+  get value() {
+    return value;
+  },
+  get valid() {
+    return true;
+  },
+  history: []
+});
+
+const validateWith = validator => async prevValidator => {
+  if (!prevValidator.valid) {
+    return prevValidator;
+  }
+
+  const instance = validator(prevValidator.value);
+  const { type, validate } = instance;
+
+  if (prevValidator.history.includes(type)) {
+    return prevValidator;
+  }
+
+  const valid = await instance.validate();
+  instance.valid = valid;
+  instance.history = [...prevValidator.history, prevValidator.type];
+  return instance;
+};
+
+const validators = {};
+
+const append = (target, newValidator) => {
+  if (!target.validate) {
+    target.validate = asyncCompose(validateWith(newValidator), SetInitalValue);
+  } else {
+    target.validate = asyncCompose(validateWith(newValidator), target.validate);
+  }
+};
+
+const fieldv8n = (() => ({
+  safeMode: false,
+  registerValidator({ name, type, method, initable }) {
+    if (this.safeMode && validators[name]) {
+      throw new Error(
+        `Validator: "${name}" already exists. No overwrite in SafeMode.`
+      );
+    }
+    const validator = initable
+      ? InitableValidator({ type, method })
+      : Validator({ type, method });
+    validator.initable = initable;
+    validators[name] = validator;
     return this;
   },
-  validate: async () => await method(value)
-});
+  compose() {
+    const fork = { ...this };
+    const handlers = {
+      get(target, key, context) {
+        const newValidator = validators[key];
 
-// TODO: create a safe mode with fail guarantees in dev environments.
-const fieldv8n = (() => {
-  const validators = {};
-
-  return {
-    registerValidator({ name, type, method, init }) {
-      // TODO: throw in safeMode when trying to overwrite an existing validator.
-      validators[name] = Validator({ type, method });
-      return this;
-    },
-    compose() {
-      const fork = { ...this };
-      const handlers = {
-        get(target, key, context) {
-          const newValidator = validators[key];
-
-          // FIXME: would be nice to drop a validation
-          // registered earlier in a chain.
-          // if (
-          //   newValidator &&
-          //   target.registeredTypes &&
-          //   target.registeredTypes.has(newValidator.type)
-          // ) {
-          //   return context;
-          // }
-
-          if (newValidator) {
-            // FIXME: Validators should be wrapped into Functors on compose.
-            if (!target.validate) {
-              target.validate = newValidator;
-            } else {
-              target.validate = compose(
-                target.validate,
-                newValidator
-              );
-            }
-
-            // if (!target.registeredTypes) {
-            //   target.registeredTypes = new Set([newValidator.type]);
-            // } else {
-            //   target.registeredTypes.add(newValidator);
-            // }
-
-            return context;
+        if (newValidator) {
+          if (newValidator.initable) {
+            return initVal => {
+              const initableNewValidator = newValidator(initVal);
+              append(target, initableNewValidator);
+              return context;
+            };
           }
-          return Reflect.get(target, key, context);
+
+          append(target, newValidator);
+          return context;
         }
-      };
-      return new Proxy(fork, handlers);
-    }
-  };
-})();
+        return Reflect.get(target, key, context);
+      }
+    };
+    return new Proxy(fork, handlers);
+  }
+}))();
 
-fieldv8n.registerValidator({
-  name: "string",
-  type: "IS_STRING",
-  method: value => Object.prototype.toString.call(value) === "[object String]"
-});
+fieldv8n
+  .registerValidator({
+    name: "string",
+    type: "IS_STRING",
+    method: value => Object.prototype.toString.call(value) === "[object String]"
+  })
+  .registerValidator({
+    name: "min",
+    type: "MIN_LENGTH",
+    method: init => value => value.length >= init,
+    initable: true
+  });
 
-fieldv8n.registerValidator({
-  name: "min",
-  type: "MIN_LENGTH",
-  method: init => value => value >= init.length,
-  init: true
-});
+const chain1 = fieldv8n.compose().string;
+const chain2 = chain1.compose().min(5).string;
 
-const chain1 = fieldv8n.compose().string.min;
+chain1
+  .validate("hi")
+  .then(({ value, valid, type, history }) =>
+    console.log("result1", value, valid, type, history)
+  );
 
-console.log(chain1);
+chain2
+  .validate("hi")
+  .then(({ value, valid, type, history }) =>
+    console.log("result2", value, valid, type, history)
+  );
 
-const chain2 = chain1.compose().string;
-
-console.log(chain2);
-
-console.log(chain2.validate("hello"));
+chain2
+  .validate(new Promise(resolve => setTimeout(resolve("hello"), 3000)))
+  .then(({ value, valid, type, history }) =>
+    console.log("result3", value, valid, type, history)
+  );
