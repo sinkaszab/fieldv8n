@@ -1,6 +1,6 @@
 # Field Validations
 
-## Targetx
+## Goals
 
 - Validations should be composed.
 - All validations should happen asynchronously.
