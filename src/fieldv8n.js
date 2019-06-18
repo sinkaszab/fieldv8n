@@ -1,3 +1,6 @@
+import "core-js/stable";
+import "regenerator-runtime/runtime";
+
 const asyncCompose = (...fns) => x =>
   fns.reduceRight(async (y, f) => f(await y), x);
 
@@ -102,36 +105,4 @@ const fieldv8n = (() => ({
   }
 }))();
 
-fieldv8n
-  .registerValidator({
-    name: "string",
-    type: "IS_STRING",
-    method: value => Object.prototype.toString.call(value) === "[object String]"
-  })
-  .registerValidator({
-    name: "min",
-    type: "MIN_LENGTH",
-    method: init => value => value.length >= init,
-    initable: true
-  });
-
-const chain1 = fieldv8n.compose().string;
-const chain2 = chain1.compose().min(5).string;
-
-chain1
-  .validate("hi")
-  .then(({ value, valid, type, history }) =>
-    console.log("result1", value, valid, type, history)
-  );
-
-chain2
-  .validate("hi")
-  .then(({ value, valid, type, history }) =>
-    console.log("result2", value, valid, type, history)
-  );
-
-chain2
-  .validate(new Promise(resolve => setTimeout(resolve("hello"), 3000)))
-  .then(({ value, valid, type, history }) =>
-    console.log("result3", value, valid, type, history)
-  );
+export default fieldv8n;
