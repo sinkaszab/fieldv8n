@@ -2,9 +2,12 @@
   "name": "fieldv8n",
   "version": "0.0.1",
   "description": "Simple form-field/data validation.",
-  "main": "build/fieldv8n.js",
+  "main": "dist/fieldv8n.cjs.js",
+  "module": "dist/fieldv8n.esm.js",
+  "browser": "dist/fieldv8n.umd.js",
   "scripts": {
-    "build": "rm -rf build; babel src --out-dir build --ignore **/*.test.js",
+    "build": "rm -rf dist; rollup -c",
+    "dev": "rollup -c -w",
     "test": "jest"
   },
   "repository": {
@@ -18,7 +21,7 @@
     "field"
   ],
   "author": "Sinka, Szabolcs",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/sinkaszab/fieldv8n/issues"
   },
@@ -28,10 +31,17 @@
     "@babel/core": "^7.4.5",
     "@babel/preset-env": "^7.4.5",
     "babel-jest": "^24.8.0",
-    "jest": "^24.8.0"
+    "jest": "^24.8.0",
+    "rollup": "^1.15.6",
+    "rollup-plugin-babel": "^4.3.2",
+    "rollup-plugin-commonjs": "^10.0.0",
+    "rollup-plugin-node-resolve": "^5.0.3"
   },
   "dependencies": {
     "core-js": "^3.1.4",
     "regenerator-runtime": "^0.13.2"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }
