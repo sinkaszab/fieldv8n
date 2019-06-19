@@ -2,8 +2,12 @@
 
 ## Goals
 
-- Validations should be composed.
-- All validations should happen asynchronously.
-- First fail will exit composed chain and propagate result.
-- Validation error shouldn't be an Exception, failing validation
-  is an expected scenario, that is the whole purpose of validation.
+- Ability to validate a single field vs. object schema.
+- Compose & re-compose validations.
+- Full asynchronous validation.
+- Validate asynchronous values.
+- A failing validation is an expected scenario,
+  validation error shouldn't be an Exception.
+- Separate concrete validators from the core "framework".
+- Be simple and flexible.
+- All validators should be custom.
