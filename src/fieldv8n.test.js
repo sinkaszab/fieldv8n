@@ -1,7 +1,7 @@
 import fieldv8n from "./fieldv8n";
 
 beforeAll(() => {
-  fieldv8n
+  fieldv8n()
     .registerValidator({
       name: "string",
       type: "IS_STRING",
@@ -18,7 +18,7 @@ beforeAll(() => {
 
 describe("A custom validator", () => {
   test("validating strings behaves well.", async done => {
-    const stringData = fieldv8n.compose().string;
+    const stringData = fieldv8n().compose().string;
 
     const {
       value: valueA,
@@ -48,7 +48,7 @@ describe("A custom validator", () => {
   });
 
   test("can be forked & extended.", async done => {
-    const stringData = fieldv8n.compose().string;
+    const stringData = fieldv8n().compose().string;
     const min3Chars = stringData.compose().min(3).string;
 
     const {
@@ -78,7 +78,7 @@ describe("A custom validator", () => {
   });
 
   test("resolves & validates async values.", async done => {
-    const stringData = fieldv8n.compose().string;
+    const stringData = fieldv8n().compose().string;
     const min3Chars = stringData.compose().min(3).string;
 
     const asyncValue = new Promise(resolve =>
