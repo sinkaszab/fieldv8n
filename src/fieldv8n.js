@@ -11,7 +11,7 @@ const Validator = ({ type, method }) => value => ({
   get value() {
     return value;
   },
-  validate: () => method(value)
+  validate: () => method(value),
 });
 
 const InitableValidator = ({ type, method }) => initVal => value => ({
@@ -21,7 +21,7 @@ const InitableValidator = ({ type, method }) => initVal => value => ({
   get value() {
     return value;
   },
-  validate: () => method(initVal)(value)
+  validate: () => method(initVal)(value),
 });
 
 const SetInitalValue = value => ({
@@ -34,7 +34,7 @@ const SetInitalValue = value => ({
   get valid() {
     return true;
   },
-  history: []
+  history: [],
 });
 
 const validateWith = validator => async prevValidator => {
@@ -42,16 +42,19 @@ const validateWith = validator => async prevValidator => {
     return prevValidator;
   }
 
-  const instance = validator(prevValidator.value);
+  const { value, type, validate } = validator(prevValidator.value);
 
-  if (prevValidator.history.includes(instance.type)) {
+  if (prevValidator.history.includes(type)) {
     return prevValidator;
   }
 
-  const valid = await instance.validate();
-  instance.valid = valid;
-  instance.history = [...prevValidator.history, prevValidator.type];
-  return instance;
+  const valid = await validate();
+  return {
+    value,
+    type,
+    valid,
+    history: [...prevValidator.history, prevValidator.type],
+  };
 };
 
 let globalSafeMode = null;
@@ -116,10 +119,10 @@ const fieldv8n = ({ safeMode = false } = { safeMode: false }) => {
             return context;
           }
           return Reflect.get(target, key, context);
-        }
+        },
       };
       return new Proxy(fork, handlers);
-    }
+    },
   };
 };
 

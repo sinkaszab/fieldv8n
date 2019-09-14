@@ -6,43 +6,33 @@ beforeAll(() => {
       name: "string",
       type: "IS_STRING",
       method: value =>
-        Object.prototype.toString.call(value) === "[object String]"
+        Object.prototype.toString.call(value) === "[object String]",
     })
     .registerValidator({
       name: "min",
       type: "MIN_LENGTH",
       method: init => value => value.length >= init,
-      initable: true
+      initable: true,
     });
 });
 
 describe("A custom validator", () => {
-  test("validating strings behaves well.", async done => {
+  test("returns awaited result.", async done => {
     const stringData = fieldv8n().compose().string;
 
-    const {
-      value: valueA,
-      valid: validA,
-      type: typeA,
-      history: historyA
-    } = await stringData.validate("hi");
+    expect(await stringData.validate("hi")).toEqual({
+      value: "hi",
+      valid: true,
+      type: "IS_STRING",
+      history: ["IS_VALUE"],
+    });
 
-    expect(valueA).toBe("hi");
-    expect(validA).toBe(true);
-    expect(typeA).toBe("IS_STRING");
-    expect(historyA).toEqual(["IS_VALUE"]);
-
-    const {
-      value: valueB,
-      valid: validB,
-      type: typeB,
-      history: historyB
-    } = await stringData.validate(42);
-
-    expect(valueB).toBe(42);
-    expect(validB).toBe(false);
-    expect(typeB).toBe("IS_STRING");
-    expect(historyB).toEqual(["IS_VALUE"]);
+    expect(await stringData.validate(42)).toEqual({
+      value: 42,
+      valid: false,
+      type: "IS_STRING",
+      history: ["IS_VALUE"],
+    });
 
     done();
   });
@@ -51,29 +41,20 @@ describe("A custom validator", () => {
     const stringData = fieldv8n().compose().string;
     const min3Chars = stringData.compose().min(3).string;
 
-    const {
-      value: valueA,
-      valid: validA,
-      type: typeA,
-      history: historyA
-    } = await min3Chars.validate("hi");
+    expect(await min3Chars.validate("hi")).toEqual({
+      value: "hi",
+      valid: false,
+      type: "MIN_LENGTH",
+      history: ["IS_VALUE", "IS_STRING"],
+    });
 
-    expect(valueA).toBe("hi");
-    expect(validA).toBe(false);
-    expect(typeA).toBe("MIN_LENGTH");
-    expect(historyA).toEqual(["IS_VALUE", "IS_STRING"]);
+    expect(await min3Chars.validate(42)).toEqual({
+      value: 42,
+      valid: false,
+      type: "IS_STRING",
+      history: ["IS_VALUE"],
+    });
 
-    const {
-      value: valueB,
-      valid: validB,
-      type: typeB,
-      history: historyB
-    } = await min3Chars.validate(42);
-
-    expect(valueB).toBe(42);
-    expect(validB).toBe(false);
-    expect(typeB).toBe("IS_STRING");
-    expect(historyB).toEqual(["IS_VALUE"]);
     done();
   });
 
@@ -85,14 +66,13 @@ describe("A custom validator", () => {
       setTimeout(resolve("hello"), 1000)
     );
 
-    const { value, valid, type, history } = await min3Chars.validate(
-      asyncValue
-    );
+    expect(await min3Chars.validate(asyncValue)).toEqual({
+      value: "hello",
+      valid: true,
+      type: "MIN_LENGTH",
+      history: ["IS_VALUE", "IS_STRING"],
+    });
 
-    expect(value).toBe("hello");
-    expect(valid).toBe(true);
-    expect(type).toBe("MIN_LENGTH");
-    expect(history).toEqual(["IS_VALUE", "IS_STRING"]);
     done();
   });
 });
