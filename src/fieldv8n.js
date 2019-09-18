@@ -37,11 +37,9 @@ const SetInitalValue = value => ({
   history: [],
 });
 
-const validateWith = validator => async prevValidator => {
-  if (!prevValidator.valid) {
-    return prevValidator;
-  }
+export class InvalidData extends Error {}
 
+const validateWith = validator => async prevValidator => {
   const { value, type, validate } = validator(prevValidator.value);
 
   if (prevValidator.history.includes(type)) {
@@ -49,17 +47,31 @@ const validateWith = validator => async prevValidator => {
   }
 
   const valid = await validate();
+
+  if (!valid) {
+    const InvalidatedValidator = {
+      value,
+      type,
+      error: new InvalidData(
+        `Value "${String(value)}" for ${type} is invalid.`
+      ),
+      history: [...prevValidator.history, prevValidator.type],
+    };
+
+    throw InvalidatedValidator;
+  }
+
   return {
     value,
     type,
-    valid,
     history: [...prevValidator.history, prevValidator.type],
   };
 };
 
 let globalSafeMode = null;
 const validators = {};
-const types = new Set();
+const types = validatorStore =>
+  new Set(validatorStore.values().map(({ type }) => type));
 
 const append = (target, newValidator) => {
   if (!target.validate) {
@@ -84,12 +96,8 @@ const fieldv8n = ({ safeMode = false } = { safeMode: false }) => {
         );
       }
 
-      if (globalSafeMode && types.has(type)) {
+      if (globalSafeMode && types(validators).has(type)) {
         throw new Error(`Type: "${type} already exists. You are in SafeMode."`);
-      }
-
-      if (globalSafeMode) {
-        types.add(type);
       }
 
       const validator = initable

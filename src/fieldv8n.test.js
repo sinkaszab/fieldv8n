@@ -1,4 +1,4 @@
-import fieldv8n from "./fieldv8n";
+import fieldv8n, { InvalidData } from "./fieldv8n";
 
 beforeAll(() => {
   fieldv8n()
@@ -17,48 +17,52 @@ beforeAll(() => {
 });
 
 describe("A custom validator", () => {
-  test("returns awaited result.", async done => {
+  test("returns awaited result.", async () => {
     const stringData = fieldv8n().compose().string;
 
     expect(await stringData.validate("hi")).toEqual({
       value: "hi",
-      valid: true,
       type: "IS_STRING",
       history: ["IS_VALUE"],
     });
 
-    expect(await stringData.validate(42)).toEqual({
-      value: 42,
-      valid: false,
-      type: "IS_STRING",
-      history: ["IS_VALUE"],
-    });
-
-    done();
+    try {
+      await stringData.validate(42);
+    } catch (error) {
+      expect(error).toEqual({
+        value: 42,
+        type: "IS_STRING",
+        error: new InvalidData('Value "42" for IS_STRING is invalid.'),
+        history: ["IS_VALUE"],
+      });
+    }
   });
 
-  test("can be forked & extended.", async done => {
+  test("can be forked & extended.", async () => {
     const stringData = fieldv8n().compose().string;
     const min3Chars = stringData.compose().min(3).string;
 
-    expect(await min3Chars.validate("hi")).toEqual({
-      value: "hi",
-      valid: false,
-      type: "MIN_LENGTH",
-      history: ["IS_VALUE", "IS_STRING"],
-    });
+    try {
+      await min3Chars.validate("hi");
+    } catch (error) {
+      expect(error).toEqual({
+        value: "hi",
+        type: "MIN_LENGTH",
+        error: new InvalidData('Value "hi" for MIN_LENGTH is invalid.'),
+        history: ["IS_VALUE", "IS_STRING"],
+      });
+    }
 
-    expect(await min3Chars.validate(42)).toEqual({
+    const error = await min3Chars.validate(42).catch(e => e);
+    expect(error).toEqual({
       value: 42,
-      valid: false,
       type: "IS_STRING",
+      error: new InvalidData('Value "42" for IS_STRING is invalid.'),
       history: ["IS_VALUE"],
     });
-
-    done();
   });
 
-  test("resolves & validates async values.", async done => {
+  test("resolves & validates async values.", async () => {
     const stringData = fieldv8n().compose().string;
     const min3Chars = stringData.compose().min(3).string;
 
@@ -68,11 +72,8 @@ describe("A custom validator", () => {
 
     expect(await min3Chars.validate(asyncValue)).toEqual({
       value: "hello",
-      valid: true,
       type: "MIN_LENGTH",
       history: ["IS_VALUE", "IS_STRING"],
     });
-
-    done();
   });
 });
