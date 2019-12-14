@@ -10,15 +10,16 @@ export default [
     output: {
       name: "fieldv8n",
       file: pkg.browser,
-      format: "umd"
+      format: "umd",
+      exports: "named",
     },
     plugins: [
       resolve(), // so Rollup can find imports
       commonjs(), // so Rollup can convert imports to an ES module
       babel({
-        exclude: ["node_modules/**"]
-      })
-    ]
+        exclude: ["node_modules/**"],
+      }),
+    ],
   },
 
   // CommonJS (for Node) and ES module (for bundlers) build.
@@ -26,13 +27,13 @@ export default [
     input: "src/fieldv8n.js",
     external: ["core-js/stable", "regenerator-runtime/runtime"],
     output: [
-      { file: pkg.main, format: "cjs" },
-      { file: pkg.module, format: "es" }
+      { file: pkg.main, format: "cjs", exports: "named" },
+      { file: pkg.module, format: "es" },
     ],
     plugins: [
       babel({
-        exclude: ["node_modules/**"]
-      })
-    ]
-  }
+        exclude: ["node_modules/**"],
+      }),
+    ],
+  },
 ];

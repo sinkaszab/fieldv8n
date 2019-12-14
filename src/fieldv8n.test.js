@@ -67,7 +67,7 @@ describe("A custom validator", () => {
     const min3Chars = stringData.compose().min(3).string;
 
     const asyncValue = new Promise(resolve =>
-      setTimeout(resolve("hello"), 1000)
+      setTimeout(resolve("hello"), 1000),
     );
 
     expect(await min3Chars.validate(asyncValue)).toEqual({

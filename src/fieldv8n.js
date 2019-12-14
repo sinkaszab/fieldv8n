@@ -53,7 +53,7 @@ const validateWith = validator => async prevValidator => {
       value,
       type,
       error: new InvalidData(
-        `Value "${String(value)}" for ${type} is invalid.`
+        `Value "${String(value)}" for ${type} is invalid.`,
       ),
       history: [...prevValidator.history, prevValidator.type],
     };
@@ -92,7 +92,7 @@ const fieldv8n = ({ safeMode = false } = { safeMode: false }) => {
     registerValidator({ name, type, method, initable }) {
       if (globalSafeMode && validators[name]) {
         throw new Error(
-          `Validator: "${name}" already exists. You are in SafeMode.`
+          `Validator: "${name}" already exists. You are in SafeMode.`,
         );
       }
 

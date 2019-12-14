@@ -10,7 +10,8 @@
     "plugin:jest/recommended"
   ],
   "plugins": [
-    "jest"
+    "jest",
+    "prettier"
   ],
   "parserOptions": {
     "sourceType": "module",
@@ -26,10 +27,7 @@
       "always-multiline"
     ],
     "prettier/prettier": [
-      "error",
-      {
-        "trailingComma": "es5"
-      }
+      "error"
     ],
     "jest/no-disabled-tests": "warn",
     "jest/no-focused-tests": "error",
