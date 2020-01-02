@@ -21,7 +21,10 @@
     "validation",
     "v8n",
     "form",
-    "field"
+    "field",
+    "async",
+    "promise",
+    "asynchronous"
   ],
   "author": "Sinka, Szabolcs",
   "license": "MIT",
