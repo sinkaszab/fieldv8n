@@ -70,7 +70,7 @@ const validateWith = validator => async prevValidator => {
 
 const validators = {};
 const types = validatorStore =>
-  new Set(validatorStore.values().map(({ type }) => type));
+  new Set(Object.values(validatorStore).map(({ type }) => type));
 
 const append = (target, newValidator) => {
   if (!target.validate) {
