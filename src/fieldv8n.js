@@ -68,7 +68,6 @@ const validateWith = validator => async prevValidator => {
   };
 };
 
-let globalSafeMode = null;
 const validators = {};
 const types = validatorStore =>
   new Set(validatorStore.values().map(({ type }) => type));
@@ -83,21 +82,15 @@ const append = (target, newValidator) => {
   target.validate = asyncCompose(validateWith(newValidator), target.validate);
 };
 
-const fieldv8n = ({ safeMode = false } = { safeMode: false }) => {
-  if (globalSafeMode === null) {
-    globalSafeMode = safeMode;
-  }
-
+const fieldv8n = () => {
   return {
     registerValidator({ name, type, method, initable }) {
-      if (globalSafeMode && validators[name]) {
-        throw new Error(
-          `Validator: "${name}" already exists. You are in SafeMode.`,
-        );
+      if (validators[name]) {
+        throw new Error(`Validator: "${name}" already exists.`);
       }
 
-      if (globalSafeMode && types(validators).has(type)) {
-        throw new Error(`Type: "${type} already exists. You are in SafeMode."`);
+      if (types(validators).has(type)) {
+        throw new Error(`Type: "${type} already exists."`);
       }
 
       const validator = initable
