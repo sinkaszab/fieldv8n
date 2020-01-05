@@ -82,49 +82,47 @@ const append = (target, newValidator) => {
   target.validate = asyncCompose(validateWith(newValidator), target.validate);
 };
 
-const fieldv8n = () => {
-  return {
-    registerValidator({ name, type, method, initable }) {
-      if (validators[name]) {
-        throw new Error(`Validator: "${name}" already exists.`);
-      }
+const fieldv8n = () => ({
+  registerValidator({ name, type, method, initable }) {
+    if (validators[name]) {
+      throw new Error(`Validator: "${name}" already exists.`);
+    }
 
-      if (types(validators).has(type)) {
-        throw new Error(`Type: "${type} already exists."`);
-      }
+    if (types(validators).has(type)) {
+      throw new Error(`Type: "${type} already exists."`);
+    }
 
-      const validator = initable
-        ? InitableValidator({ type, method })
-        : Validator({ type, method });
-      validator.initable = initable;
-      validators[name] = validator;
-      return this;
-    },
+    const validator = initable
+      ? InitableValidator({ type, method })
+      : Validator({ type, method });
+    validator.initable = initable;
+    validators[name] = validator;
+    return this;
+  },
 
-    compose() {
-      const fork = { ...this };
-      const handlers = {
-        get(target, key, context) {
-          const newValidator = validators[key];
+  compose() {
+    const fork = { ...this };
+    const handlers = {
+      get(target, key, context) {
+        const newValidator = validators[key];
 
-          if (newValidator) {
-            if (newValidator.initable) {
-              return initVal => {
-                const initableNewValidator = newValidator(initVal);
-                append(target, initableNewValidator);
-                return context;
-              };
-            }
-
-            append(target, newValidator);
-            return context;
+        if (newValidator) {
+          if (newValidator.initable) {
+            return initVal => {
+              const initableNewValidator = newValidator(initVal);
+              append(target, initableNewValidator);
+              return context;
+            };
           }
-          return Reflect.get(target, key, context);
-        },
-      };
-      return new Proxy(fork, handlers);
-    },
-  };
-};
+
+          append(target, newValidator);
+          return context;
+        }
+        return Reflect.get(target, key, context);
+      },
+    };
+    return new Proxy(fork, handlers);
+  },
+});
 
 export default fieldv8n;
