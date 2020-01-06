@@ -1,4 +1,4 @@
-import { fieldv8n, registerValidator, InvalidData } from "./fieldv8n";
+import { make, registerValidator, InvalidData } from "./fieldv8n";
 
 beforeAll(() => {
   registerValidator({
@@ -17,7 +17,7 @@ beforeAll(() => {
 
 describe("A custom validator", () => {
   test("returns awaited result.", async () => {
-    const stringData = fieldv8n().compose().string;
+    const stringData = make().compose().string;
 
     expect(await stringData.validate("hi")).toEqual({
       value: "hi",
@@ -38,7 +38,7 @@ describe("A custom validator", () => {
   });
 
   test("can be forked & extended.", async () => {
-    const stringData = fieldv8n().compose().string;
+    const stringData = make().compose().string;
     const min3Chars = stringData.compose().min(3).string;
 
     try {
@@ -62,7 +62,7 @@ describe("A custom validator", () => {
   });
 
   test("resolves & validates async values.", async () => {
-    const stringData = fieldv8n().compose().string;
+    const stringData = make().compose().string;
     const min3Chars = stringData.compose().min(3).string;
 
     const asyncValue = new Promise(resolve =>

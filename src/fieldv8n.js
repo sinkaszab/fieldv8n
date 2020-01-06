@@ -98,7 +98,7 @@ function registerValidator({ name, type, method, initable }) {
   validators[name] = validator;
 }
 
-const fieldv8n = () => ({
+const make = () => ({
   compose() {
     const fork = { ...this };
     const handlers = {
@@ -124,4 +124,4 @@ const fieldv8n = () => ({
   },
 });
 
-export { fieldv8n, registerValidator, InvalidData };
+export { make, registerValidator, InvalidData };
