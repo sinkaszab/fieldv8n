@@ -1,4 +1,4 @@
-import fieldv8n, { InvalidData } from "./fieldv8n";
+import { fieldv8n, InvalidData } from "./fieldv8n";
 
 beforeAll(() => {
   fieldv8n()

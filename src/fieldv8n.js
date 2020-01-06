@@ -37,7 +37,7 @@ const SetInitalValue = value => ({
   history: [],
 });
 
-export class InvalidData extends Error {}
+class InvalidData extends Error {}
 
 const validateWith = validator => async prevValidator => {
   const { value, type, validate } = validator(prevValidator.value);
@@ -125,4 +125,4 @@ const fieldv8n = () => ({
   },
 });
 
-export default fieldv8n;
+export { fieldv8n, InvalidData };
