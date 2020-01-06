@@ -2,77 +2,136 @@ import { make, registerValidator, InvalidData } from "./fieldv8n";
 
 beforeAll(() => {
   registerValidator({
-    name: "string",
-    type: "IS_STRING",
-    method: value =>
-      Object.prototype.toString.call(value) === "[object String]",
+    name: "atCharPresent",
+    type: "HAS_ONE_AT_CHAR",
+    method: email => email.match(/@/g).length === 1,
   });
   registerValidator({
-    name: "min",
-    type: "MIN_LENGTH",
-    method: init => value => value.length >= init,
-    initable: true,
+    name: "hasUsername",
+    type: "HAS_USERNAME",
+    method: email => email.match(/^.+@/) !== null,
+  });
+  registerValidator({
+    name: "hasDomain",
+    type: "HAS_DOMAIN_PART",
+    method: email => email.match(/@[^.]+\.[^.]+/) !== null,
   });
 });
 
 describe("A custom validator", () => {
-  test("returns awaited result.", async () => {
-    const stringData = make().compose().string;
+  test("validates value and throws when invalid.", async () => {
+    const emailWithOneAtChar = make().compose().atCharPresent;
 
-    expect(await stringData.validate("hi")).toEqual({
-      value: "hi",
-      type: "IS_STRING",
+    expect(await emailWithOneAtChar.validate("hi@hello.com")).toEqual({
+      value: "hi@hello.com",
+      type: "HAS_ONE_AT_CHAR",
       history: ["IS_VALUE"],
     });
 
     try {
-      await stringData.validate(42);
+      await emailWithOneAtChar.validate("hi@@hello.com");
     } catch (error) {
       expect(error).toEqual({
-        value: 42,
-        type: "IS_STRING",
-        error: new InvalidData('Value "42" for IS_STRING is invalid.'),
+        value: "hi@@hello.com",
+        type: "HAS_ONE_AT_CHAR",
+        error: new InvalidData(
+          'Value "hi@@hello.com" for HAS_ONE_AT_CHAR is invalid.',
+        ),
         history: ["IS_VALUE"],
       });
     }
   });
 
-  test("can be forked & extended.", async () => {
-    const stringData = make().compose().string;
-    const min3Chars = stringData.compose().min(3).string;
+  test("can be composed with more custom validators.", async () => {
+    const emailWithBasicParts = make().compose().atCharPresent.hasUsername
+      .hasDomain;
+
+    expect(await emailWithBasicParts.validate("hi@hello.com")).toEqual({
+      value: "hi@hello.com",
+      type: "HAS_DOMAIN_PART",
+      history: ["IS_VALUE", "HAS_ONE_AT_CHAR", "HAS_USERNAME"],
+    });
 
     try {
-      await min3Chars.validate("hi");
+      await emailWithBasicParts.validate("@hello.com");
     } catch (error) {
       expect(error).toEqual({
-        value: "hi",
-        type: "MIN_LENGTH",
-        error: new InvalidData('Value "hi" for MIN_LENGTH is invalid.'),
-        history: ["IS_VALUE", "IS_STRING"],
+        value: "@hello.com",
+        type: "HAS_USERNAME",
+        error: new InvalidData(
+          'Value "@hello.com" for HAS_USERNAME is invalid.',
+        ),
+        history: ["IS_VALUE", "HAS_ONE_AT_CHAR"],
       });
     }
 
-    const error = await min3Chars.validate(42).catch(e => e);
+    const error = await emailWithBasicParts
+      .validate("hi@@hello.com")
+      .catch(e => e);
     expect(error).toEqual({
-      value: 42,
-      type: "IS_STRING",
-      error: new InvalidData('Value "42" for IS_STRING is invalid.'),
+      value: "hi@@hello.com",
+      type: "HAS_ONE_AT_CHAR",
+      error: new InvalidData(
+        'Value "hi@@hello.com" for HAS_ONE_AT_CHAR is invalid.',
+      ),
       history: ["IS_VALUE"],
     });
   });
 
-  test("resolves & validates async values.", async () => {
-    const stringData = make().compose().string;
-    const min3Chars = stringData.compose().min(3).string;
+  test("can be forked & extended.", async () => {
+    const emailWithOneAtChar = make().compose().atCharPresent;
+    const emailWithBasicParts = emailWithOneAtChar.compose().hasUsername
+      .hasDomain;
+
+    expect(await emailWithOneAtChar.validate("@")).toEqual({
+      value: "@",
+      type: "HAS_ONE_AT_CHAR",
+      history: ["IS_VALUE"],
+    });
+
+    try {
+      await emailWithBasicParts.validate("@");
+    } catch (error) {
+      expect(error).toEqual({
+        value: "@",
+        type: "HAS_USERNAME",
+        error: new InvalidData('Value "@" for HAS_USERNAME is invalid.'),
+        history: ["IS_VALUE", "HAS_ONE_AT_CHAR"],
+      });
+    }
+  });
+
+  test("resolves & validates async values and works with async validators.", async () => {
+    const emailWithBasicParts = make().compose().atCharPresent.hasUsername
+      .hasDomain;
 
     const asyncValue = new Promise(resolve =>
-      setTimeout(resolve("hello"), 1000),
+      setTimeout(resolve("hi@hello.com"), 1000),
     );
 
-    expect(await min3Chars.validate(asyncValue)).toEqual({
-      value: "hello",
-      type: "MIN_LENGTH",
-      history: ["IS_VALUE", "IS_STRING"],
+    expect(await emailWithBasicParts.validate(asyncValue)).toEqual({
+      value: "hi@hello.com",
+      type: "HAS_DOMAIN_PART",
+      history: ["IS_VALUE", "HAS_ONE_AT_CHAR", "HAS_USERNAME"],
+    });
+
+    registerValidator({
+      name: "isRegistered",
+      type: "REGISTERED",
+      method: () => new Promise(resolve => setTimeout(resolve(true), 1000)),
+    });
+
+    const asyncEmailValidation = emailWithBasicParts.compose().isRegistered;
+
+    expect(await asyncEmailValidation.validate(asyncValue)).toEqual({
+      value: "hi@hello.com",
+      type: "REGISTERED",
+      history: [
+        "IS_VALUE",
+        "HAS_ONE_AT_CHAR",
+        "HAS_USERNAME",
+        "HAS_DOMAIN_PART",
+      ],
     });
   });
 });
