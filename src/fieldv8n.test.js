@@ -1,19 +1,18 @@
-import { fieldv8n, InvalidData } from "./fieldv8n";
+import { fieldv8n, registerValidator, InvalidData } from "./fieldv8n";
 
 beforeAll(() => {
-  fieldv8n()
-    .registerValidator({
-      name: "string",
-      type: "IS_STRING",
-      method: value =>
-        Object.prototype.toString.call(value) === "[object String]",
-    })
-    .registerValidator({
-      name: "min",
-      type: "MIN_LENGTH",
-      method: init => value => value.length >= init,
-      initable: true,
-    });
+  registerValidator({
+    name: "string",
+    type: "IS_STRING",
+    method: value =>
+      Object.prototype.toString.call(value) === "[object String]",
+  });
+  registerValidator({
+    name: "min",
+    type: "MIN_LENGTH",
+    method: init => value => value.length >= init,
+    initable: true,
+  });
 });
 
 describe("A custom validator", () => {

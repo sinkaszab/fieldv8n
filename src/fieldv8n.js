@@ -82,24 +82,23 @@ const append = (target, newValidator) => {
   target.validate = asyncCompose(validateWith(newValidator), target.validate);
 };
 
+function registerValidator({ name, type, method, initable }) {
+  if (validators[name]) {
+    throw new Error(`Validator: "${name}" already exists.`);
+  }
+
+  if (types(validators).has(type)) {
+    throw new Error(`Type: "${type} already exists."`);
+  }
+
+  const validator = initable
+    ? InitableValidator({ type, method })
+    : Validator({ type, method });
+  validator.initable = !!initable;
+  validators[name] = validator;
+}
+
 const fieldv8n = () => ({
-  registerValidator({ name, type, method, initable }) {
-    if (validators[name]) {
-      throw new Error(`Validator: "${name}" already exists.`);
-    }
-
-    if (types(validators).has(type)) {
-      throw new Error(`Type: "${type} already exists."`);
-    }
-
-    const validator = initable
-      ? InitableValidator({ type, method })
-      : Validator({ type, method });
-    validator.initable = !!initable;
-    validators[name] = validator;
-    return this;
-  },
-
   compose() {
     const fork = { ...this };
     const handlers = {
@@ -125,4 +124,4 @@ const fieldv8n = () => ({
   },
 });
 
-export { fieldv8n, InvalidData };
+export { fieldv8n, registerValidator, InvalidData };
