@@ -95,7 +95,7 @@ const fieldv8n = () => ({
     const validator = initable
       ? InitableValidator({ type, method })
       : Validator({ type, method });
-    validator.initable = initable;
+    validator.initable = !!initable;
     validators[name] = validator;
     return this;
   },
