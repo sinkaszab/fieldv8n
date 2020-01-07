@@ -1,43 +1,10 @@
 import "core-js/stable";
 import "regenerator-runtime/runtime";
+import { asyncCompose } from "./functionalHelper";
+import { InvalidData, ValidatorNameExists, TypeExists } from "./exceptions";
+import { Validator, InitableValidator, SetInitalValue } from "./validators";
 
-const asyncCompose = (...fns) => x =>
-  fns.reduceRight(async (y, f) => f(await y), x);
-
-const Validator = ({ type, method }) => value => ({
-  get type() {
-    return type;
-  },
-  get value() {
-    return value;
-  },
-  validate: () => method(value),
-});
-
-const InitableValidator = ({ type, method }) => initVal => value => ({
-  get type() {
-    return type;
-  },
-  get value() {
-    return value;
-  },
-  validate: () => method(initVal)(value),
-});
-
-const SetInitalValue = value => ({
-  get type() {
-    return "IS_VALUE";
-  },
-  get value() {
-    return value;
-  },
-  get valid() {
-    return true;
-  },
-  history: [],
-});
-
-class InvalidData extends Error {}
+const validators = {};
 
 const validateWith = validator => async prevValidator => {
   const { value, type, validate } = validator(prevValidator.value);
@@ -68,34 +35,11 @@ const validateWith = validator => async prevValidator => {
   };
 };
 
-const validators = {};
-const types = validatorStore =>
-  new Set(Object.values(validatorStore).map(({ type }) => type));
-
-const append = (target, newValidator) => {
-  if (!target.validate) {
-    // eslint-disable-next-line no-param-reassign
-    target.validate = asyncCompose(validateWith(newValidator), SetInitalValue);
-    return;
-  }
-  // eslint-disable-next-line no-param-reassign
-  target.validate = asyncCompose(validateWith(newValidator), target.validate);
-};
-
-function registerValidator({ name, type, method, initable }) {
-  if (validators[name]) {
-    throw new Error(`Validator: "${name}" already exists.`);
-  }
-
-  if (types(validators).has(type)) {
-    throw new Error(`Type: "${type} already exists."`);
-  }
-
-  const validator = initable
-    ? InitableValidator({ type, method })
-    : Validator({ type, method });
-  validator.initable = !!initable;
-  validators[name] = validator;
+function append(target, newValidator) {
+  target.validate = asyncCompose(
+    validateWith(newValidator),
+    target.validate || SetInitalValue,
+  );
 }
 
 const make = () => ({
@@ -113,7 +57,6 @@ const make = () => ({
               return context;
             };
           }
-
           append(target, newValidator);
           return context;
         }
@@ -123,5 +66,26 @@ const make = () => ({
     return new Proxy(fork, handlers);
   },
 });
+
+const types = validatorStore =>
+  new Set(Object.values(validatorStore).map(({ type }) => type));
+
+const alreadyExists = x => `${x} already exists.`;
+
+function registerValidator({ name, type, method, initable }) {
+  if (validators[name]) {
+    throw new ValidatorNameExists(alreadyExists(`Validator: "${name}"`));
+  }
+
+  if (types(validators).has(type)) {
+    throw new TypeExists(alreadyExists(`Type: "${type}"`));
+  }
+
+  const validator = initable
+    ? InitableValidator({ type, method })
+    : Validator({ type, method });
+  validator.initable = !!initable;
+  validators[name] = validator;
+}
 
 export { make, registerValidator, InvalidData };
