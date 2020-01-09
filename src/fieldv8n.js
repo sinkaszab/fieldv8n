@@ -85,6 +85,7 @@ function registerValidator({ name, type, method, initable }) {
     ? InitableValidator({ type, method })
     : Validator({ type, method });
   validator.initable = !!initable;
+  validator.type = type;
   validators[name] = validator;
 }
 
