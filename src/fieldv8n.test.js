@@ -1,4 +1,5 @@
-import { make, registerValidator, InvalidData } from "./fieldv8n";
+import { make, registerValidator } from "./fieldv8n";
+import { InvalidData, ValidatorNameExists, TypeExists } from "./exceptions";
 
 beforeAll(() => {
   registerValidator({

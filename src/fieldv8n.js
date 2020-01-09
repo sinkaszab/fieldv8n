@@ -89,4 +89,4 @@ function registerValidator({ name, type, method, initable }) {
   validators[name] = validator;
 }
 
-export { make, registerValidator, InvalidData };
+export { make, registerValidator };
