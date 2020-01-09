@@ -136,3 +136,22 @@ describe("A custom validator", () => {
     });
   });
 });
+
+describe("Registering a validator", () => {
+  test("more than once throw exception.", () => {
+    expect(() =>
+      registerValidator({
+        name: "atCharPresent",
+        type: "DIFFERENT_HAS_ONE_AT_CHAR",
+        method: email => email.match(/@/g).length === 1,
+      }),
+    ).toThrow(ValidatorNameExists);
+    expect(() =>
+      registerValidator({
+        name: "differentAtCharPresent",
+        type: "HAS_ONE_AT_CHAR",
+        method: email => email.match(/@/g).length === 1,
+      }),
+    ).toThrow(TypeExists);
+  });
+});
