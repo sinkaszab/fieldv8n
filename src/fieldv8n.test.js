@@ -138,7 +138,7 @@ describe("A custom validator", () => {
 });
 
 describe("Registering a validator", () => {
-  test("more than once throw exception.", () => {
+  test("more than once throws exception.", () => {
     expect(() =>
       registerValidator({
         name: "atCharPresent",
