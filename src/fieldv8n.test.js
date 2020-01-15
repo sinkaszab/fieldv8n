@@ -23,6 +23,8 @@ describe("A custom validator", () => {
   test("validates value and throws when invalid.", async () => {
     const emailWithOneAtChar = make().compose().atCharPresent;
 
+    expect.assertions(2);
+
     expect(await emailWithOneAtChar.validate("hi@hello.com")).toEqual({
       value: "hi@hello.com",
       type: "HAS_ONE_AT_CHAR",
@@ -46,6 +48,8 @@ describe("A custom validator", () => {
   test("can be composed with more custom validators.", async () => {
     const emailWithBasicParts = make().compose().atCharPresent.hasUsername
       .hasDomain;
+
+    expect.assertions(3);
 
     expect(await emailWithBasicParts.validate("hi@hello.com")).toEqual({
       value: "hi@hello.com",
@@ -84,6 +88,8 @@ describe("A custom validator", () => {
     const emailWithBasicParts = emailWithOneAtChar.compose().hasUsername
       .hasDomain;
 
+    expect.assertions(2);
+
     expect(await emailWithOneAtChar.validate("@")).toEqual({
       value: "@",
       type: "HAS_ONE_AT_CHAR",
@@ -109,6 +115,8 @@ describe("A custom validator", () => {
     const asyncValue = new Promise(resolve =>
       setTimeout(resolve("hi@hello.com"), 1000),
     );
+
+    expect.assertions(2);
 
     expect(await emailWithBasicParts.validate(asyncValue)).toEqual({
       value: "hi@hello.com",
