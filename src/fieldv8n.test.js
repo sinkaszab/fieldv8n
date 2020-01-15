@@ -1,5 +1,10 @@
 import { make, registerValidator } from "./fieldv8n";
-import { InvalidData, ValidatorNameExists, TypeExists } from "./exceptions";
+import {
+  InvalidData,
+  ValidatorNameExists,
+  TypeExists,
+  ValidatorRuntimeError,
+} from "./exceptions";
 
 beforeAll(() => {
   registerValidator({
@@ -161,5 +166,24 @@ describe("Registering a validator", () => {
         method: email => email.match(/@/g).length === 1,
       }),
     ).toThrow(TypeExists);
+  });
+});
+
+describe("A runtime error in a validation function", () => {
+  test("will throw ValidatorRuntimeError.", async () => {
+    registerValidator({
+      name: "runtimeBomb",
+      type: "RUNTIME_ERROR",
+      method: x => x.thisWillThrow(),
+    });
+    expect.assertions(2);
+    try {
+      await make()
+        .compose()
+        .runtimeBomb.validate("ooops");
+    } catch (error) {
+      expect(error.error).toBeInstanceOf(ValidatorRuntimeError);
+      expect(error).toHaveProperty("runtimeError");
+    }
   });
 });

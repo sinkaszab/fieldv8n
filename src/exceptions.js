@@ -4,4 +4,6 @@ class ValidatorNameExists extends Error {}
 
 class TypeExists extends Error {}
 
-export { InvalidData, ValidatorNameExists, TypeExists };
+class ValidatorRuntimeError extends Error {}
+
+export { InvalidData, ValidatorNameExists, TypeExists, ValidatorRuntimeError };

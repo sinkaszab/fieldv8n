@@ -1,7 +1,12 @@
 import "core-js/stable";
 import "regenerator-runtime/runtime";
 import { asyncCompose } from "./functionalHelper";
-import { InvalidData, ValidatorNameExists, TypeExists } from "./exceptions";
+import {
+  InvalidData,
+  ValidatorNameExists,
+  TypeExists,
+  ValidatorRuntimeError,
+} from "./exceptions";
 import { Validator, InitableValidator, SetInitalValue } from "./validators";
 
 const validators = {};
@@ -13,7 +18,20 @@ const validateWith = validator => async prevValidator => {
     return prevValidator;
   }
 
-  const valid = await validate();
+  let valid;
+  try {
+    valid = await validate();
+  } catch (error) {
+    const FailedValidator = {
+      value,
+      type,
+      error: new ValidatorRuntimeError(
+        `"${type}" threw error during validation.`,
+      ),
+      runtimeError: error,
+    };
+    throw FailedValidator;
+  }
 
   if (!valid) {
     const InvalidatedValidator = {
