@@ -75,13 +75,16 @@ const make = () => ({
               append(target, initableNewValidator);
               return context;
             };
+          } else {
+            append(target, newValidator);
+            return context;
           }
-          append(target, newValidator);
-          return context;
+        } else {
+          return Reflect.get(target, key, context);
         }
-        return Reflect.get(target, key, context);
       },
     };
+
     return new Proxy(fork, handlers);
   },
 });
