@@ -176,7 +176,7 @@ describe("A runtime error in a validation function", () => {
       type: "RUNTIME_ERROR",
       method: x => x.thisWillThrow(),
     });
-    expect.assertions(2);
+    expect.assertions(3);
     try {
       await make()
         .compose()
@@ -184,6 +184,15 @@ describe("A runtime error in a validation function", () => {
     } catch (error) {
       expect(error.error).toBeInstanceOf(ValidatorRuntimeError);
       expect(error).toHaveProperty("runtimeError");
+      expect(error).toEqual({
+        value: "ooops",
+        type: "RUNTIME_ERROR",
+        error: new ValidatorRuntimeError(
+          '"RUNTIME_ERROR" threw error during validation.',
+        ),
+        history: ["IS_VALUE"],
+        runtimeError: new TypeError("x.thisWillThrow is not a function"),
+      });
     }
   });
 });
