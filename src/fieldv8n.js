@@ -28,6 +28,7 @@ const validateWith = validator => async prevValidator => {
       error: new ValidatorRuntimeError(
         `"${type}" threw error during validation.`,
       ),
+      history: [...prevValidator.history, prevValidator.type],
       runtimeError: error,
     };
     throw FailedValidator;
