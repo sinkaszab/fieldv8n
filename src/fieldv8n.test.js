@@ -22,6 +22,12 @@ beforeAll(() => {
     type: "HAS_DOMAIN_PART",
     method: email => email.match(/@[^.]+\.[^.]+/) !== null,
   });
+  registerValidator({
+    name: "maxCharacters",
+    type: "CHAR_LIMIT",
+    method: n => str => str.length <= n,
+    initable: true,
+  });
 });
 
 describe("A custom validator", () => {
@@ -44,6 +50,56 @@ describe("A custom validator", () => {
         type: "HAS_ONE_AT_CHAR",
         error: new InvalidData(
           'Value "hi@@hello.com" for HAS_ONE_AT_CHAR is invalid.',
+        ),
+        history: ["IS_VALUE"],
+      });
+    }
+  });
+
+  test("can be initialized with a custom value.", async () => {
+    const isShortID = make()
+      .compose()
+      .maxCharacters(5);
+
+    const isLongID = make()
+      .compose()
+      .maxCharacters(10);
+
+    expect.assertions(4);
+
+    expect(await isShortID.validate("HELLO")).toEqual({
+      value: "HELLO",
+      type: "CHAR_LIMIT",
+      history: ["IS_VALUE"],
+    });
+
+    try {
+      await isShortID.validate("NOTSHORTFORSURE");
+    } catch (error) {
+      expect(error).toEqual({
+        value: "NOTSHORTFORSURE",
+        type: "CHAR_LIMIT",
+        error: new InvalidData(
+          'Value "NOTSHORTFORSURE" for CHAR_LIMIT is invalid.',
+        ),
+        history: ["IS_VALUE"],
+      });
+    }
+
+    expect(await isLongID.validate("HELLOWORLD")).toEqual({
+      value: "HELLOWORLD",
+      type: "CHAR_LIMIT",
+      history: ["IS_VALUE"],
+    });
+
+    try {
+      await isLongID.validate("MORETHANCHARSOFTEN");
+    } catch (error) {
+      expect(error).toEqual({
+        value: "MORETHANCHARSOFTEN",
+        type: "CHAR_LIMIT",
+        error: new InvalidData(
+          'Value "MORETHANCHARSOFTEN" for CHAR_LIMIT is invalid.',
         ),
         history: ["IS_VALUE"],
       });
