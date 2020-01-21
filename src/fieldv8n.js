@@ -99,7 +99,7 @@ function registerValidator({ name, type, method, initable }) {
     throw new ValidatorNameExists(alreadyExists(`Validator: "${name}"`));
   }
 
-  if (types(validators).has(type)) {
+  if (types(validators).has(type) || type === "IS_VALUE") {
     throw new TypeExists(alreadyExists(`Type: "${type}"`));
   }
 

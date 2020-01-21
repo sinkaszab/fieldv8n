@@ -223,6 +223,17 @@ describe("Registering a validator", () => {
       }),
     ).toThrow(TypeExists);
   });
+
+  test("with the initial type throws exception.", () => {
+    const INIT_TYPE = "IS_VALUE";
+    expect(() =>
+      registerValidator({
+        name: "myBannedValidator",
+        type: INIT_TYPE,
+        method: x => x,
+      }),
+    ).toThrow(TypeExists);
+  });
 });
 
 describe("A runtime error in a validation function", () => {
