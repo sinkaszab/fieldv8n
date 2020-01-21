@@ -110,7 +110,7 @@ describe("A custom validator", () => {
     const emailWithBasicParts = make().compose().atCharPresent.hasUsername
       .hasDomain;
 
-    expect.assertions(3);
+    expect.assertions(2);
 
     expect(await emailWithBasicParts.validate("hi@hello.com")).toEqual({
       value: "hi@hello.com",
@@ -130,18 +130,35 @@ describe("A custom validator", () => {
         history: ["IS_VALUE", "HAS_ONE_AT_CHAR"],
       });
     }
+  });
 
-    const error = await emailWithBasicParts
-      .validate("hi@@hello.com")
-      .catch(e => e);
-    expect(error).toEqual({
-      value: "hi@@hello.com",
-      type: "HAS_ONE_AT_CHAR",
-      error: new InvalidData(
-        'Value "hi@@hello.com" for HAS_ONE_AT_CHAR is invalid.',
-      ),
-      history: ["IS_VALUE"],
-    });
+  test("can be used in Promise chain style with then.", () => {
+    const emailWithBasicParts = make().compose().atCharPresent.hasUsername
+      .hasDomain;
+    expect.assertions(1);
+    return emailWithBasicParts.validate("hi@hello.com").then(result =>
+      expect(result).toEqual({
+        value: "hi@hello.com",
+        type: "HAS_DOMAIN_PART",
+        history: ["IS_VALUE", "HAS_ONE_AT_CHAR", "HAS_USERNAME"],
+      }),
+    );
+  });
+
+  test("can be used in Promise chain style with catch.", () => {
+    const emailWithBasicParts = make().compose().atCharPresent.hasUsername
+      .hasDomain;
+    expect.assertions(1);
+    return emailWithBasicParts.validate("hi@@hello.com").catch(error =>
+      expect(error).toEqual({
+        value: "hi@@hello.com",
+        type: "HAS_ONE_AT_CHAR",
+        error: new InvalidData(
+          'Value "hi@@hello.com" for HAS_ONE_AT_CHAR is invalid.',
+        ),
+        history: ["IS_VALUE"],
+      }),
+    );
   });
 
   test("can be forked & extended.", async () => {
