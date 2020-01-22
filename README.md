@@ -55,7 +55,7 @@ more implementation modes.
 If I want a flexible validation "framework" it seems essential to separate the
 validators from the core framework. And after all, some use cases might need an
 ISO compliant email check and others only need to ensure that the user has an
-"@" character and naybe one "." after the "@" in her/his email address to verify
+"@" character and maybe one "." after the "@" in her/his email address to verify
 intention.
 
 So if I don't check types and cannot define a good set of standard validators,
@@ -237,7 +237,7 @@ const emailValidation = make()
 const validateEmail = (onInvalid, onValid) => async emailAddress => {
   try {
     const validData = await emailValidation.validate(emailAddress);
-    onValid(validationResult);
+    onValid(validData);
   } catch (invalidData) {
     onInvalid(invalidData);
   }
@@ -320,7 +320,7 @@ Runtime errors should be sent to a tracking service.
 const validateEmail = (onInvalid, onValid) => async emailAddress => {
   try {
     const validData = await emailValidation.validate(emailAddress);
-    onValid(validationResult);
+    onValid(validData);
   } catch (invalidData) {
     if (invalidData.runtimeError) {
       logRuntimeError(invalidData);
