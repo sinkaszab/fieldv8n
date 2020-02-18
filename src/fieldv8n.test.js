@@ -363,3 +363,38 @@ describe("A runtime error in a validation function", () => {
     }
   });
 });
+
+describe("Adding validations to the chain", () => {
+  test("should only be selected from existing validators.", () => {
+    const emailWithBasicParts = make().compose().atCharPresent.hasUsername
+      .hasDomain;
+
+    expect.assertions(1);
+
+    // eslint-disable-next-line no-unused-vars
+    let seemsLikeAHarmlessCall = emailWithBasicParts.constructor;
+
+    // MARK: Seems harmless, but will be added to the validation chain!
+    // That's why the has own property check is essential!
+    // Object {
+    //   "error": [Error: "undefined" threw error during validation.],
+    //   "history": Array [
+    //     "IS_VALUE",
+    //     "HAS_ONE_AT_CHAR",
+    //     "HAS_USERNAME",
+    //     "HAS_DOMAIN_PART",
+    //   ],
+    //   "runtimeError": [TypeError: validate is not a function],
+    //   "type": undefined,
+    //   "value": undefined,
+    // }
+
+    return emailWithBasicParts.validate("hi@hello.com").then(result =>
+      expect(result).toEqual({
+        value: "hi@hello.com",
+        type: "HAS_DOMAIN_PART",
+        history: ["IS_VALUE", "HAS_ONE_AT_CHAR", "HAS_USERNAME"],
+      }),
+    );
+  });
+});
