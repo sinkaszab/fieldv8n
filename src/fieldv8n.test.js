@@ -30,6 +30,16 @@ beforeAll(() => {
   });
 });
 
+test("A bare composition doesn't yet have a validate function.", () => {
+  const barebones = make().compose();
+
+  expect.assertions(1);
+
+  expect(() => barebones.validate()).toThrow(
+    "barebones.validate is not a function",
+  );
+});
+
 describe("A custom validator", () => {
   test("validates value and throws when invalid.", async () => {
     const emailWithOneAtChar = make().compose().atCharPresent;
@@ -135,7 +145,9 @@ describe("A custom validator", () => {
   test("can be used in Promise chain style with then.", () => {
     const emailWithBasicParts = make().compose().atCharPresent.hasUsername
       .hasDomain;
+
     expect.assertions(1);
+
     return emailWithBasicParts.validate("hi@hello.com").then(result =>
       expect(result).toEqual({
         value: "hi@hello.com",
@@ -148,7 +160,9 @@ describe("A custom validator", () => {
   test("can be used in Promise chain style with catch.", () => {
     const emailWithBasicParts = make().compose().atCharPresent.hasUsername
       .hasDomain;
+
     expect.assertions(1);
+
     return emailWithBasicParts.validate("hi@@hello.com").catch(error =>
       expect(error).toEqual({
         value: "hi@@hello.com",
@@ -159,6 +173,75 @@ describe("A custom validator", () => {
         history: ["IS_VALUE"],
       }),
     );
+  });
+
+  test("can be used in Promise chain style with catch after then.", () => {
+    const emailWithBasicParts = make().compose().atCharPresent.hasUsername
+      .hasDomain;
+
+    const nonCalledHandler = jest.fn();
+
+    expect.assertions(2);
+
+    return emailWithBasicParts
+      .validate("hi@@hello.com")
+      .then(nonCalledHandler)
+      .catch(error =>
+        expect(error).toEqual({
+          value: "hi@@hello.com",
+          type: "HAS_ONE_AT_CHAR",
+          error: new InvalidData(
+            'Value "hi@@hello.com" for HAS_ONE_AT_CHAR is invalid.',
+          ),
+          history: ["IS_VALUE"],
+        }),
+      )
+      .then(() => expect(nonCalledHandler).not.toHaveBeenCalled());
+  });
+
+  test("can be used in Promise chain style with then(onFulfilled, _).", () => {
+    const emailWithBasicParts = make().compose().atCharPresent.hasUsername
+      .hasDomain;
+
+    const nonCalledHandler = jest.fn();
+
+    expect.assertions(2);
+
+    return emailWithBasicParts
+      .validate("hi@hello.com")
+      .then(
+        result =>
+          expect(result).toEqual({
+            value: "hi@hello.com",
+            type: "HAS_DOMAIN_PART",
+            history: ["IS_VALUE", "HAS_ONE_AT_CHAR", "HAS_USERNAME"],
+          }),
+        nonCalledHandler,
+      )
+      .then(() => expect(nonCalledHandler).not.toHaveBeenCalled());
+  });
+
+  test("can be used in Promise chain style with then(_, onRejected).", () => {
+    const emailWithBasicParts = make().compose().atCharPresent.hasUsername
+      .hasDomain;
+
+    const nonCalledHandler = jest.fn();
+
+    expect.assertions(2);
+
+    return emailWithBasicParts
+      .validate("hi@@hello.com")
+      .then(nonCalledHandler, error =>
+        expect(error).toEqual({
+          value: "hi@@hello.com",
+          type: "HAS_ONE_AT_CHAR",
+          error: new InvalidData(
+            'Value "hi@@hello.com" for HAS_ONE_AT_CHAR is invalid.',
+          ),
+          history: ["IS_VALUE"],
+        }),
+      )
+      .then(() => expect(nonCalledHandler).not.toHaveBeenCalled());
   });
 
   test("can be forked & extended.", async () => {
