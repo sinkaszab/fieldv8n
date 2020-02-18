@@ -1,6 +1,6 @@
 {
   "name": "fieldv8n",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "Simple form-field/data validation.",
   "main": "dist/fieldv8n.cjs.js",
   "module": "dist/fieldv8n.esm.js",
