@@ -66,7 +66,9 @@ const make = () => ({
     const fork = { ...this };
     const handlers = {
       get(target, key, context) {
-        const newValidator = validators[key];
+        const newValidator =
+          Object.prototype.hasOwnProperty.call(validators, key) &&
+          validators[key];
 
         if (newValidator) {
           if (newValidator.initable) {
