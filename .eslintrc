@@ -1,4 +1,5 @@
 {
+  "parser": "@typescript-eslint/parser",
   "env": {
     "browser": true,
     "commonjs": true,
@@ -6,30 +7,21 @@
   },
   "extends": [
     "airbnb-base/legacy",
-    "plugin:prettier/recommended",
-    "plugin:jest/recommended"
+    "plugin:jest/recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier/@typescript-eslint",
+    "plugin:prettier/recommended"
   ],
-  "plugins": [
-    "jest",
-    "prettier"
-  ],
+  "plugins": ["jest", "prettier"],
   "parserOptions": {
     "sourceType": "module",
     "ecmaVersion": 2018
   },
   "rules": {
-    "linebreak-style": [
-      "error",
-      "unix"
-    ],
-    "comma-dangle": [
-      "error",
-      "always-multiline"
-    ],
+    "linebreak-style": ["error", "unix"],
+    "comma-dangle": ["error", "always-multiline"],
     "no-param-reassign": "warn",
-    "prettier/prettier": [
-      "error"
-    ],
+    "prettier/prettier": ["error"],
     "no-else-return": "off",
     "jest/no-disabled-tests": "warn",
     "jest/no-focused-tests": "error",
