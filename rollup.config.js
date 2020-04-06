@@ -1,39 +1,10 @@
-import resolve from "rollup-plugin-node-resolve";
-import commonjs from "rollup-plugin-commonjs";
-import babel from "rollup-plugin-babel";
-import pkg from "./package.json";
+import typescript from "@rollup/plugin-typescript";
 
-export default [
-  // browser-friendly UMD build
-  {
-    input: "src/fieldv8n.js",
-    output: {
-      name: "fieldv8n",
-      file: pkg.browser,
-      format: "umd",
-      exports: "named",
-    },
-    plugins: [
-      resolve(), // so Rollup can find imports
-      commonjs(), // so Rollup can convert imports to an ES module
-      babel({
-        exclude: ["node_modules/**"],
-      }),
-    ],
+export default {
+  input: "src/fieldv8n.ts",
+  output: {
+    dir: "dist",
+    format: "cjs",
   },
-
-  // CommonJS (for Node) and ES module (for bundlers) build.
-  {
-    input: "src/fieldv8n.js",
-    external: ["core-js/stable", "regenerator-runtime/runtime"],
-    output: [
-      { file: pkg.main, format: "cjs", exports: "named" },
-      { file: pkg.module, format: "es" },
-    ],
-    plugins: [
-      babel({
-        exclude: ["node_modules/**"],
-      }),
-    ],
-  },
-];
+  plugins: [typescript()],
+};
