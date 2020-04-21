@@ -1,12 +1,36 @@
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type NonInitableMethod = (fieldValue: any) => boolean;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type InitableMethod = (...params: any[]) => NonInitableMethod;
+
 export interface ValidatorConfig {
   identifier: string;
-  method?: (fieldValue: unknown) => boolean;
-  initableMethod?: (...params: unknown[]) => (fieldValue: unknown) => boolean;
+  method: NonInitableMethod | InitableMethod;
+  initable: boolean;
 }
 
-export interface Validator {
+interface BaseValidator {
   type: string;
-  validate: (fieldValue: unknown) => boolean;
-  isInitable: () => boolean;
-  init?: (...params: unknown[]) => void;
 }
+
+export interface FinalValidator extends BaseValidator {
+  validate: NonInitableMethod;
+  isInitable: false;
+}
+
+export interface InitedFinalValidator extends BaseValidator {
+  validate: NonInitableMethod;
+  isInitable: true;
+  initParams: unknown[];
+}
+
+export interface InitableValidator extends BaseValidator {
+  type: string;
+  isInitable: true;
+  init: (...params: unknown[]) => InitedFinalValidator;
+}
+
+export type Validator =
+  | FinalValidator
+  | InitableValidator
+  | InitedFinalValidator;
