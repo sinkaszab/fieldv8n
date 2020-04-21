@@ -22,8 +22,8 @@ const validator: (config: ValidatorConfig) => () => Validator = (config) => {
 
     const validatorInstance: Validator = {
       type: config.identifier,
-      validate: (inputValue) =>
-        initedMethod ? initedMethod(inputValue) : config.method(inputValue),
+      validate: (fieldValue) =>
+        initedMethod ? initedMethod(fieldValue) : config.method(fieldValue),
       isInitable: () => isInitable,
     };
 
