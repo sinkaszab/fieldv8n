@@ -39,25 +39,15 @@ describe("Creating a validator from config", () => {
   });
 
   it("returns a factory where produced instances are different.", () => {
-    expect.assertions(2);
+    expect.assertions(1);
 
-    const finalFactory = validator({
-      identifier: "VALIDATE",
-      initable: false,
-      method: (x: unknown) => !!x,
-    });
-
-    expect(finalFactory()).not.toBe(finalFactory());
-
-    const initableFactory = validator({
+    const v8n = validator({
       identifier: "VALIDATE",
       initable: true,
-      method: (p: unknown) => (x: unknown): boolean => p !== x,
-    });
+      method: (p: string) => (x: string): boolean => p !== x,
+    }) as InitableValidator;
 
-    expect((initableFactory() as InitableValidator).init("a")).not.toBe(
-      (initableFactory() as InitableValidator).init("a"),
-    );
+    expect(v8n.init("a")).not.toBe(v8n.init("a"));
   });
 });
 
@@ -65,29 +55,30 @@ describe("Validator", () => {
   it("validates field input value.", () => {
     expect.assertions(1);
 
-    const factory = validator({
+    const v8n = validator({
       identifier: "IS_FOO",
       initable: false,
       method: (foo: string) => foo === "foo",
-    });
-    const inst = factory() as FinalValidator;
-    expect(inst.validate("foo")).toBe(true);
+    }) as FinalValidator;
+
+    expect(v8n.validate("foo")).toBe(true);
   });
 
   it("validates field input value with setting inital value.", () => {
-    expect.assertions(2);
+    expect.assertions(3);
 
-    const factory = validator({
+    const v8n = validator({
       identifier: "IS_FOO_BAR",
       initable: true,
       method: (foo: string) => (bar: string): boolean => foo + bar === "foobar",
-    });
-    const inst = factory() as InitableValidator;
+    }) as InitableValidator;
 
-    const foobar = inst.init("foo");
+    const foobar = v8n.init("foo");
     expect(foobar.validate("bar")).toBe(true);
 
-    const bazbar = inst.init("baz");
+    const bazbar = v8n.init("baz");
+
     expect(bazbar.validate("bar")).toBe(false);
+    expect(foobar.validate("bar")).toBe(true);
   });
 });

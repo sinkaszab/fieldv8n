@@ -21,16 +21,17 @@ export interface FinalValidator extends BaseValidator {
 export interface InitedFinalValidator extends BaseValidator {
   validate: NonInitableMethod;
   isInitable: true;
-  initParams: unknown[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  initParams: any[];
 }
 
 export interface InitableValidator extends BaseValidator {
   type: string;
   isInitable: true;
-  init: (...params: unknown[]) => InitedFinalValidator;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  init: (...params: any[]) => InitedFinalValidator;
 }
 
-export type Validator =
-  | FinalValidator
-  | InitableValidator
-  | InitedFinalValidator;
+export type InitableOrFinalValidator = FinalValidator | InitableValidator;
+
+export type FinalValidators = FinalValidator | InitedFinalValidator;
