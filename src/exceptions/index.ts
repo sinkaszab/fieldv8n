@@ -1,2 +1,2 @@
 export * from "./InvalidIdentifierStyle";
-export * from "./NoMethodDefined";
+export * from "./MethodNeedsToBeAFunction";
