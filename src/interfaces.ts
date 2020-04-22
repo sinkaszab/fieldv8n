@@ -1,6 +1,6 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type NonInitableMethod = (fieldValue: any) => boolean;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+import { VALIDATE, ValidationState } from "./shared";
+
+export type NonInitableMethod = (fieldValue: any) => boolean | Promise<boolean>;
 export type InitableMethod = (...params: any[]) => NonInitableMethod;
 
 export interface ValidatorConfig {
@@ -9,29 +9,54 @@ export interface ValidatorConfig {
   initable: boolean;
 }
 
-interface BaseValidator {
+interface Validator {
   type: string;
+  isInitable: boolean;
+  wasInited?: boolean;
 }
 
-export interface FinalValidator extends BaseValidator {
+export interface FinalValidator extends Validator {
   validate: NonInitableMethod;
-  isInitable: false;
 }
 
-export interface InitedFinalValidator extends BaseValidator {
+export interface InitedFinalValidator extends Validator {
   validate: NonInitableMethod;
-  isInitable: true;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   initParams: any[];
 }
 
-export interface InitableValidator extends BaseValidator {
-  type: string;
-  isInitable: true;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface InitableValidator extends Validator {
   init: (...params: any[]) => InitedFinalValidator;
 }
 
 export type InitableOrFinalValidator = FinalValidator | InitableValidator;
 
-export type FinalValidators = FinalValidator | InitedFinalValidator;
+export type FinalValidatorTypes = FinalValidator | InitedFinalValidator;
+
+interface InitialArgs {
+  [validator: string]: any[];
+}
+
+export interface ValidationFactory {
+  init?: (initialArgs: InitialArgs) => ValidationFactory;
+  isInitable: boolean;
+  [VALIDATE]: (opts: {
+    value: any;
+    onChange: EventCallback;
+    onlyOnCompleted?: boolean;
+  }) => void;
+}
+
+export interface Validation {
+  type: string;
+  state: ValidationState;
+  runtimeError?: Error;
+}
+
+export type EventCallback = (validations: Validation[], done: boolean) => void;
+
+export interface ValidateOptions {
+  validators: FinalValidatorTypes[];
+  value: any;
+  onChange: EventCallback;
+  onlyOnCompleted: boolean;
+}

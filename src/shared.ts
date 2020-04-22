@@ -1,4 +1,11 @@
 const VALIDATE = Symbol("validate");
-const INIT = Symbol("init");
 
-export { VALIDATE, INIT };
+export enum ValidationState {
+  Pending = "PENDING",
+  Validating = "VALIDATING",
+  Accepted = "ACCEPTED",
+  Rejected = "REJECTED",
+  Canceled = "CANCELED",
+}
+
+export { VALIDATE };

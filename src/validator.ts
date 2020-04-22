@@ -27,6 +27,7 @@ const validator: (config: ValidatorConfig) => InitableOrFinalValidator = (
       type: config.identifier,
       validate: method(...params) as NonInitableMethod,
       isInitable: true,
+      wasInited: true,
       initParams: params,
     };
     return Object.freeze(final);
@@ -36,6 +37,7 @@ const validator: (config: ValidatorConfig) => InitableOrFinalValidator = (
     const initable: InitableValidator = {
       type: config.identifier,
       isInitable: true,
+      wasInited: false,
       init: initValidator,
     };
     return Object.freeze(initable);
