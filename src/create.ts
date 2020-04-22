@@ -4,24 +4,19 @@ import {
   ValidateOptions,
   EventCallback,
   ValidationFactory,
+  ValidatorEntry,
+  HandleChanged,
+  IntoNextValidations,
+  NextStateGenerator,
 } from "./interfaces";
 import { VALIDATE, ValidationState } from "./shared";
 import { CalledValidateOnInitable } from "./exceptions";
-
-type ValidatorEntry = [string, FinalValidatorTypes];
 
 const toEntries: (vs: FinalValidatorTypes[]) => ValidatorEntry[] = (vs) =>
   Object.entries(vs);
 
 const initValidations = (validators: FinalValidatorTypes[]): Validation[] =>
   validators.map(({ type }) => ({ type, state: ValidationState.Pending }));
-
-interface HandleChanged {
-  validations: Validation[];
-  done: boolean;
-  onChange: EventCallback;
-  onlyOnCompleted: boolean;
-}
 
 const handleChanged: (opts: HandleChanged) => void = ({
   validations,
@@ -35,18 +30,7 @@ const handleChanged: (opts: HandleChanged) => void = ({
   onChange(validations, done);
 };
 
-interface ValidationElements {
-  prev: Validation[];
-  current: Validation;
-  next: Validation[];
-}
-
-interface ToNextValidations {
-  elements: ValidationElements;
-  nextState: ValidationState;
-}
-
-const toNextValidations: (params: ToNextValidations) => Validation[] = ({
+const intoNextValidations: (params: IntoNextValidations) => Validation[] = ({
   elements,
   nextState,
 }) => [
@@ -54,6 +38,22 @@ const toNextValidations: (params: ToNextValidations) => Validation[] = ({
   { ...elements.current, state: nextState },
   ...elements.next,
 ];
+
+const generateNextValidationsState: (
+  opts: NextStateGenerator,
+) => IntoNextValidations = ({
+  validations,
+  index,
+  nextState,
+  runtimeError,
+}) => ({
+  elements: {
+    prev: validations.slice(0, index),
+    current: { ...validations[index], ...(runtimeError && { runtimeError }) },
+    next: validations.slice(index + 1),
+  },
+  nextState,
+});
 
 const validate: (opts: ValidateOptions) => Promise<void> = async ({
   validators,
@@ -70,21 +70,25 @@ const validate: (opts: ValidateOptions) => Promise<void> = async ({
   let validations = initValidations(validators);
   emit({ validations, done: false });
   let rejected = false;
-  let doEmit = (): void => {};
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let doEmit = (cycleDidEnd?: boolean): void => {};
   for (const [i, validator] of toEntries(validators)) {
-    const index = +i;
-    const prev = validations.slice(0, index);
-    const current = { ...validations[index] };
-    const next = validations.slice(index + 1);
-    const deferEmitInCycle = (nextState: ValidationState): void => {
-      doEmit = (): void => {
-        validations = toNextValidations({
-          elements: { prev, current, next },
-          nextState,
-        });
+    const deferEmitInCycle = (
+      nextState: ValidationState,
+      runtimeError?: Error,
+    ): void => {
+      doEmit = (cycleDidEnd = false): void => {
+        validations = intoNextValidations(
+          generateNextValidationsState({
+            validations,
+            index: +i,
+            nextState,
+            runtimeError,
+          }),
+        );
         emit({
           validations,
-          done: false,
+          done: cycleDidEnd,
         });
       };
     };
@@ -102,15 +106,14 @@ const validate: (opts: ValidateOptions) => Promise<void> = async ({
           deferEmitInCycle(ValidationState.Rejected);
         }
       } catch (runtimeError) {
-        // FIXME: inject runtimeError
         rejected = true;
-        deferEmitInCycle(ValidationState.Rejected);
+        deferEmitInCycle(ValidationState.Rejected, runtimeError);
       }
     }
     doEmit();
   }
-  // FIXME: Switch `done` to `true`.
-  doEmit();
+  const cycleDidEnd = true;
+  doEmit(cycleDidEnd);
 };
 
 const create: (validators: FinalValidatorTypes[]) => ValidationFactory = (

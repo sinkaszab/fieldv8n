@@ -60,3 +60,30 @@ export interface ValidateOptions {
   onChange: EventCallback;
   onlyOnCompleted: boolean;
 }
+
+export type ValidatorEntry = [string, FinalValidatorTypes];
+
+export interface HandleChanged {
+  validations: Validation[];
+  done: boolean;
+  onChange: EventCallback;
+  onlyOnCompleted: boolean;
+}
+
+interface ValidationElements {
+  prev: Validation[];
+  current: Validation;
+  next: Validation[];
+}
+
+export interface IntoNextValidations {
+  elements: ValidationElements;
+  nextState: ValidationState;
+}
+
+export interface NextStateGenerator {
+  validations: Validation[];
+  index: number;
+  nextState: ValidationState;
+  runtimeError?: Error;
+}
