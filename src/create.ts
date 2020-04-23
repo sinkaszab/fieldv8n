@@ -68,7 +68,7 @@ const validate: (opts: ValidateOptions) => Promise<void> = async ({
     handleChanged({ validations, done, onChange, onlyOnCompleted });
   };
   let validations = initValidations(validators);
-  emit({ validations, done: false });
+  emit({ validations, done: !validations.length });
   let rejected = false;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let doEmit = (cycleDidEnd?: boolean): void => {};
