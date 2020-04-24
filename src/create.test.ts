@@ -1,7 +1,11 @@
 import { create, validator } from "./fieldv8n";
 import { FinalValidatorTypes } from "./interfaces";
 import { VALIDATE } from "./shared";
-import { CalledValidateOnInitable } from "./exceptions";
+import {
+  CalledValidateOnInitable,
+  MissingInit,
+  InitOrderTypeMismatch,
+} from "./exceptions";
 
 describe("Create validation", () => {
   const IS_FOO = validator({
@@ -25,7 +29,13 @@ describe("Create validation", () => {
   const CONTAINS = validator({
     identifier: "CONTAINS",
     initable: true,
-    method: (a: string) => (b: string): boolean => b === a,
+    method: (a: string) => (b: string): boolean => new RegExp(a).test(b),
+  }) as FinalValidatorTypes;
+
+  const STARTS_WITH = validator({
+    identifier: "STARTS_WITH",
+    initable: true,
+    method: (a: string) => (b: string): boolean => b.startsWith(a),
   }) as FinalValidatorTypes;
 
   const IS_BOMB = validator({
@@ -336,5 +346,60 @@ describe("Create validation", () => {
       ],
       true,
     );
+  });
+
+  it("accepts initial values for initable validators.", async () => {
+    expect.assertions(2);
+
+    const onChange = jest.fn();
+    const { future, handler } = prepare(onChange);
+    const v8n = create([CONTAINS, CONTAINS, ENDS_BAZ, CONTAINS]).init?.([
+      ["CONTAINS", ["foo"]],
+      ["CONTAINS", ["bar"]],
+      ["CONTAINS", ["baz"]],
+    ]);
+    if (v8n !== undefined) {
+      v8n[VALIDATE]({
+        value: "foobarbaz",
+        onChange: handler,
+        onlyOnCompleted: true,
+      });
+    }
+
+    await future;
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith(
+      [
+        { type: "CONTAINS", state: "ACCEPTED" },
+        { type: "CONTAINS", state: "ACCEPTED" },
+        { type: "ENDS_BAZ", state: "ACCEPTED" },
+        { type: "CONTAINS", state: "ACCEPTED" },
+      ],
+      true,
+    );
+  });
+
+  it("throws on missing init values.", () => {
+    expect.assertions(1);
+
+    expect(() =>
+      create([CONTAINS, CONTAINS, ENDS_BAZ, CONTAINS]).init?.([
+        ["CONTAINS", ["foo"]],
+        ["CONTAINS", ["bar"]],
+      ]),
+    ).toThrow(MissingInit);
+  });
+
+  it("throws on init value order mismatch.", () => {
+    expect.assertions(1);
+
+    expect(() =>
+      create([CONTAINS, STARTS_WITH, CONTAINS]).init?.([
+        ["CONTAINS", ["foo"]],
+        ["CONTAINS", ["bar"]],
+        ["STARTS_WITH", ["bar"]],
+      ]),
+    ).toThrow(InitOrderTypeMismatch);
   });
 });

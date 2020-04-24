@@ -32,12 +32,17 @@ export type InitableOrFinalValidator = FinalValidator | InitableValidator;
 
 export type FinalValidatorTypes = FinalValidator | InitedFinalValidator;
 
-interface InitialArgs {
-  [validator: string]: any[];
-}
+export type AnyValidator =
+  | FinalValidator
+  | InitedFinalValidator
+  | InitableValidator;
+
+type InitType = string;
+
+export type InitValues = [InitType, any[]][];
 
 export interface ValidationFactory {
-  init?: (initialArgs: InitialArgs) => ValidationFactory;
+  init?: (initialArgs: InitValues) => ValidationFactory;
   isInitable: boolean;
   [VALIDATE]: (opts: {
     value: any;
@@ -55,13 +60,13 @@ export interface Validation {
 export type EventCallback = (validations: Validation[], done: boolean) => void;
 
 export interface ValidateOptions {
-  validators: FinalValidatorTypes[];
+  validators: AnyValidator[];
   value: any;
   onChange: EventCallback;
   onlyOnCompleted: boolean;
 }
 
-export type ValidatorEntry = [string, FinalValidatorTypes];
+export type ValidatorEntry = [string, AnyValidator];
 
 export interface HandleChanged {
   validations: Validation[];
