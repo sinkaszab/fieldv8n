@@ -21,7 +21,7 @@ const validator: (config: ValidatorConfig) => InitableOrFinalValidator = (
     throw new MethodNeedsToBeAFunction();
   }
 
-  function initValidator(...params: unknown[]): InitedFinalValidator {
+  function initValidator(...params: any[]): InitedFinalValidator {
     const method = config.method as InitableMethod;
     const final: InitedFinalValidator = {
       type: config.identifier,

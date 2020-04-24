@@ -1,5 +1,4 @@
 import {
-  FinalValidatorTypes,
   Validation,
   ValidateOptions,
   EventCallback,
@@ -8,14 +7,27 @@ import {
   HandleChanged,
   IntoNextValidations,
   NextStateGenerator,
+  InitableOrFinalValidator,
+  FinalValidatorTypes,
+  AnyValidator,
+  InitValues,
+  InitableValidator,
+  InitedFinalValidator,
+  FinalValidator,
 } from "./interfaces";
 import { VALIDATE, ValidationState } from "./shared";
-import { CalledValidateOnInitable } from "./exceptions";
+import {
+  CalledValidateOnInitable,
+  InitOrderTypeMismatch,
+  MissingInit,
+} from "./exceptions";
 
-const toEntries: (vs: FinalValidatorTypes[]) => ValidatorEntry[] = (vs) =>
+const toEntries: (vs: AnyValidator[]) => ValidatorEntry[] = (vs) =>
   Object.entries(vs);
 
-const initValidations = (validators: FinalValidatorTypes[]): Validation[] =>
+const initValidations = (
+  validators: InitableOrFinalValidator[],
+): Validation[] =>
   validators.map(({ type }) => ({ type, state: ValidationState.Pending }));
 
 const handleChanged: (opts: HandleChanged) => void = ({
@@ -98,7 +110,9 @@ const validate: (opts: ValidateOptions) => Promise<void> = async ({
       deferEmitInCycle(ValidationState.Validating);
       doEmit();
       try {
-        const isValid = await validator.validate(value);
+        const isValid = await (validator as FinalValidatorTypes).validate(
+          value,
+        );
         if (isValid) {
           deferEmitInCycle(ValidationState.Accepted);
         } else {
@@ -116,12 +130,41 @@ const validate: (opts: ValidateOptions) => Promise<void> = async ({
   doEmit(cycleDidEnd);
 };
 
-const create: (validators: FinalValidatorTypes[]) => ValidationFactory = (
+const isValidatorInitable = (validator: InitableOrFinalValidator): boolean =>
+  validator.isInitable && !validator.wasInited;
+
+const initValidators = (
+  validators: AnyValidator[],
+  create: (validators: InitableOrFinalValidator[]) => ValidationFactory,
+) => (initVals: InitValues): ValidationFactory =>
+  create(
+    validators.map(
+      (validator: AnyValidator): FinalValidatorTypes => {
+        if (isValidatorInitable(validator)) {
+          const currentVals = initVals.shift();
+          if (currentVals === undefined) {
+            throw new MissingInit();
+          }
+          const [type, vals] = currentVals;
+          if (type !== validator.type) {
+            throw new InitOrderTypeMismatch();
+          }
+          return (validator as InitableValidator).init(
+            ...vals,
+          ) as InitedFinalValidator;
+        } else {
+          return validator as FinalValidator;
+        }
+      },
+    ),
+  );
+
+const create: (validators: InitableOrFinalValidator[]) => ValidationFactory = (
   validators,
 ) => {
-  let init;
-  const isInitable = validators.some(
-    (validator) => validator.isInitable && !validator.wasInited,
+  const init = initValidators(validators, create);
+  const isInitable = validators.some((validator) =>
+    isValidatorInitable(validator),
   );
   const types = validators.map(({ type }) => type);
 
@@ -140,7 +183,7 @@ const create: (validators: FinalValidatorTypes[]) => ValidationFactory = (
     types,
     isInitable,
     [VALIDATE]: validateHelper,
-    init,
+    ...(isInitable && { init }),
   });
 };
 
