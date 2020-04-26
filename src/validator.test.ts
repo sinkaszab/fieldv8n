@@ -1,4 +1,4 @@
-import validator from "./validator";
+import { validator } from "./fieldv8n";
 import { MethodNeedsToBeAFunction, InvalidIdentifierStyle } from "./exceptions";
 import {
   InitableValidator,
