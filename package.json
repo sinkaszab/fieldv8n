@@ -2,12 +2,9 @@
   "name": "fieldv8n",
   "version": "0.1.0",
   "description": "Simple form-field/data validation.",
-  "main": "dist/fieldv8n.cjs.js",
-  "module": "dist/fieldv8n.esm.js",
-  "browser": "dist/fieldv8n.umd.js",
+  "main": "dist/fieldv8n.js",
   "scripts": {
-    "build": "rm -rf dist; rollup -c",
-    "dev": "rollup -c -w",
+    "build": "rm -rf dist; tsc",
     "test": "jest --coverage --watchAll",
     "lint": "eslint --fix . && echo 'Lint complete.'",
     "prettier-check": "prettier --check src/**/*.js",
@@ -36,8 +33,6 @@
     "@babel/core": "^7.9.0",
     "@babel/preset-env": "^7.9.0",
     "@babel/preset-typescript": "^7.9.0",
-    "@rollup/plugin-node-resolve": "^7.1.1",
-    "@rollup/plugin-sucrase": "^3.0.0",
     "@types/jest": "^25.2.1",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",
@@ -52,7 +47,6 @@
     "jest": "^25.2.7",
     "lint-staged": "^10.1.2",
     "prettier": "^2.0.2",
-    "rollup": "^2.3.3",
     "ts-jest": "^25.4.0",
     "tslib": "^1.11.1",
     "typescript": "^3.8.3"
@@ -66,7 +60,7 @@
     }
   },
   "lint-staged": {
-    "*.{js,ts,tsx}": [
+    "*.{ts,tsx}": [
       "eslint --fix",
       "git add"
     ]
