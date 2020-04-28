@@ -6,7 +6,7 @@ import {
   InitableValidator,
   InitedFinalValidator,
   InitableOrFinalValidator,
-} from "./interfaces";
+} from "./types";
 import { InvalidIdentifierStyle, MethodNeedsToBeAFunction } from "./exceptions";
 import { identifierMatchesStyle, isFunction } from "./helpers";
 
