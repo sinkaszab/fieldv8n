@@ -42,7 +42,7 @@ type InitType = string;
 export type InitValues = [InitType, any[]][];
 
 export interface ValidationFactory {
-  init?: (initialArgs: InitValues) => ValidationFactory;
+  init: (initialArgs: InitValues) => ValidationFactory;
   isInitable: boolean;
   [VALIDATE]: (opts: {
     value: any;

@@ -368,7 +368,7 @@ describe("Create validation", () => {
     expect.assertions(1);
 
     expect(() =>
-      create([CONTAINS, CONTAINS, ENDS_BAZ, CONTAINS]).init?.([
+      create([CONTAINS, CONTAINS, ENDS_BAZ, CONTAINS]).init([
         ["CONTAINS", ["foo"]],
         ["CONTAINS", ["bar"]],
       ]),
@@ -379,11 +379,38 @@ describe("Create validation", () => {
     expect.assertions(1);
 
     expect(() =>
-      create([CONTAINS, STARTS_WITH, CONTAINS]).init?.([
+      create([CONTAINS, STARTS_WITH, CONTAINS]).init([
         ["CONTAINS", ["foo"]],
         ["CONTAINS", ["bar"]],
         ["STARTS_WITH", ["bar"]],
       ]),
     ).toThrow(InitOrderTypeMismatch);
+  });
+
+  it("returns itself when inited and is not initable.", async () => {
+    expect.assertions(3);
+
+    const onChange = jest.fn();
+    const { future, handler } = prepare(onChange);
+    const v8n = create([IS_FOO, IS_BAR, IS_BOMB]);
+    const unnecessarilyInited = v8n.init([["CONTAINS", ["foo"]]]);
+    v8n[VALIDATE]({
+      value: "foo",
+      onChange: handler,
+      onlyOnCompleted: true,
+    });
+
+    await future;
+
+    expect(v8n).toBe(unnecessarilyInited);
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith(
+      [
+        { type: "IS_FOO", state: "ACCEPTED" },
+        { type: "IS_BAR", state: "REJECTED" },
+        { type: "IS_BOMB", state: "CANCELED" },
+      ],
+      true,
+    );
   });
 });
