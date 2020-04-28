@@ -193,7 +193,13 @@ const create: Creator = (validators) => {
     types,
     isInitable,
     [VALIDATE]: validateHelper,
-    ...(isInitable && { init }),
+    init(initVals: InitValues): ValidationFactory {
+      if (isInitable) {
+        return init(initVals);
+      } else {
+        return this;
+      }
+    },
   });
 };
 
