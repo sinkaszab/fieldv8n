@@ -1,5 +1,6 @@
 import { create, validator } from "./fieldv8n";
-import { FinalValidatorTypes } from "./interfaces";
+import { prepare } from "./testUtils";
+import { FinalValidatorTypes } from "./types";
 import { VALIDATE } from "./shared";
 import {
   CalledValidateOnInitable,
@@ -66,23 +67,6 @@ describe("Create validation", () => {
     initable: false,
     method: (x: string) => x.endsWith("baz"),
   }) as FinalValidatorTypes;
-
-  const prepare: (cb: any) => { future: Promise<void>; handler: () => void } = (
-    jestCallback: any,
-  ) => {
-    let releaseLockWhenAllValidationsFinished: any;
-    const handler = (...args: any[]): void => {
-      const [, done] = args;
-      jestCallback(...args);
-      if (done) {
-        releaseLockWhenAllValidationsFinished();
-      }
-    };
-    const future: Promise<void> = new Promise((resolve) => {
-      releaseLockWhenAllValidationsFinished = resolve;
-    });
-    return { future, handler };
-  };
 
   it("only calls onChange on completed when passed validators are an empty array.", async () => {
     expect.assertions(2);

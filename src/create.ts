@@ -14,7 +14,7 @@ import {
   InitableValidator,
   InitedFinalValidator,
   FinalValidator,
-} from "./interfaces";
+} from "./types";
 import { VALIDATE, ValidationState } from "./shared";
 import {
   CalledValidateOnInitable,
@@ -159,20 +159,30 @@ const initValidators = (
     ),
   );
 
-const create: (validators: InitableOrFinalValidator[]) => ValidationFactory = (
-  validators,
-) => {
+interface Creator {
+  (validators: InitableOrFinalValidator[]): ValidationFactory;
+}
+
+interface ValidateHelper {
+  (opts: {
+    value: any;
+    onChange: EventCallback;
+    onlyOnCompleted?: boolean;
+  }): void;
+}
+
+const create: Creator = (validators) => {
   const init = initValidators(validators, create);
   const isInitable = validators.some((validator) =>
     isValidatorInitable(validator),
   );
   const types = validators.map(({ type }) => type);
 
-  const validateHelper: (opts: {
-    value: any;
-    onChange: EventCallback;
-    onlyOnCompleted?: boolean;
-  }) => void = ({ value, onChange, onlyOnCompleted = false }) => {
+  const validateHelper: ValidateHelper = ({
+    value,
+    onChange,
+    onlyOnCompleted = false,
+  }) => {
     if (isInitable) {
       throw new CalledValidateOnInitable("Call init first, then validate.");
     }
