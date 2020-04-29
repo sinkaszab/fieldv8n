@@ -4,6 +4,8 @@ import { OutComeTypeNotImplemented } from "./exceptions";
 
 describe("Check identifies validations", () => {
   it("as accepted when all member was accepted.", () => {
+    expect.assertions(2);
+
     const v8nsPass = [
       { type: "A", state: ValidationState.Accepted },
       { type: "B", state: ValidationState.Accepted },
@@ -21,6 +23,8 @@ describe("Check identifies validations", () => {
   });
 
   it("as rejected when one member was rejected.", () => {
+    expect.assertions(2);
+
     const v8nsPass = [
       { type: "A", state: ValidationState.Accepted },
       { type: "B", state: ValidationState.Rejected },
@@ -38,6 +42,8 @@ describe("Check identifies validations", () => {
   });
 
   it("as runtime error when one member has a truthy runtimeError key.", () => {
+    expect.assertions(2);
+
     const v8nsPass = [
       { type: "A", state: ValidationState.Accepted },
       { type: "B", state: ValidationState.Rejected, runtimeError: Error() },
@@ -55,6 +61,8 @@ describe("Check identifies validations", () => {
   });
 
   it("except for receiving unhandled outcome.", () => {
+    expect.assertions(1);
+
     const v8ns = [
       { type: "A", state: ValidationState.Accepted },
       { type: "B", state: ValidationState.Validating },
