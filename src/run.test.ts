@@ -1,6 +1,6 @@
 import { validator, create, run } from "./fieldv8n";
 import { prepare } from "./testUtils";
-import { FinalValidatorTypes } from "./types";
+import { FinalValidatorTypes } from "./shared";
 import { CalledValidateOnInitable } from "./exceptions";
 
 // MARK: `run` is just a thin layer over `create`, therefore

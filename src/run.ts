@@ -1,5 +1,4 @@
-import { ValidationFactory, EventCallback } from "./types";
-import { VALIDATE } from "./shared";
+import { ValidationFactory, EventCallback, VALIDATE } from "./shared";
 
 interface ValidationRunner {
   (options: {
