@@ -14,8 +14,9 @@ import {
   InitableValidator,
   InitedFinalValidator,
   FinalValidator,
-} from "./types";
-import { VALIDATE, ValidationState } from "./shared";
+  VALIDATE,
+  ValidationState,
+} from "./shared";
 import {
   CalledValidateOnInitable,
   InitOrderTypeMismatch,

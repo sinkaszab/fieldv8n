@@ -1,7 +1,6 @@
 import { create, validator } from "./fieldv8n";
 import { prepare } from "./testUtils";
-import { FinalValidatorTypes } from "./types";
-import { VALIDATE } from "./shared";
+import { FinalValidatorTypes, VALIDATE } from "./shared";
 import {
   CalledValidateOnInitable,
   MissingInit,

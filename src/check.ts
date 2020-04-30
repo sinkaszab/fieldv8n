@@ -1,5 +1,4 @@
-import { Validation } from "./types";
-import { ValidationState } from "./shared";
+import { Validation, ValidationState } from "./shared";
 import { OutComeTypeNotImplemented } from "./exceptions";
 
 export enum Outcome {
