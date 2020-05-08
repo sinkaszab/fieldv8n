@@ -4,7 +4,7 @@ import {
   EventCallback,
   ValidationFactory,
   ValidatorEntry,
-  HandleChanged,
+  ChangeHandler,
   IntoNextValidations,
   NextStateGenerator,
   InitableOrFinalValidator,
@@ -31,7 +31,7 @@ const initValidations = (
 ): Validation[] =>
   validators.map(({ type }) => ({ type, state: ValidationState.Pending }));
 
-const handleChanged: (opts: HandleChanged) => void = ({
+const handleChanged: (opts: ChangeHandler) => void = ({
   validations,
   done,
   onChange,

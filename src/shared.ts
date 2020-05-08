@@ -76,7 +76,7 @@ export interface ValidateOptions {
 
 export type ValidatorEntry = [string, AnyValidator];
 
-export interface HandleChanged {
+export interface ChangeHandler {
   validations: Validation[];
   done: boolean;
   onChange: EventCallback;
