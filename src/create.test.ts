@@ -1,6 +1,6 @@
 import { create, validator } from "./fieldv8n";
 import { prepare } from "./testUtils";
-import { FinalValidatorTypes, VALIDATE } from "./shared";
+import { VALIDATE } from "./shared";
 import {
   CalledValidateOnInitable,
   MissingInit,
@@ -12,31 +12,31 @@ describe("Create validation", () => {
     identifier: "IS_FOO",
     initable: false,
     method: (x: string) => x === "foo",
-  }) as FinalValidatorTypes;
+  });
 
   const IS_BAR = validator({
     identifier: "IS_BAR",
     initable: false,
     method: (x: string) => x === "bar",
-  }) as FinalValidatorTypes;
+  });
 
   const IS_BAZ = validator({
     identifier: "IS_BAZ",
     initable: false,
     method: (x: string) => x === "baz",
-  }) as FinalValidatorTypes;
+  });
 
   const CONTAINS = validator({
     identifier: "CONTAINS",
     initable: true,
     method: (a: string) => (b: string): boolean => new RegExp(a).test(b),
-  }) as FinalValidatorTypes;
+  });
 
   const STARTS_WITH = validator({
     identifier: "STARTS_WITH",
     initable: true,
     method: (a: string) => (b: string): boolean => b.startsWith(a),
-  }) as FinalValidatorTypes;
+  });
 
   const IS_BOMB = validator({
     identifier: "IS_BOMB",
@@ -47,25 +47,25 @@ describe("Create validation", () => {
       }
       return x === "boom!";
     },
-  }) as FinalValidatorTypes;
+  });
 
   const STARTS_FOO = validator({
     identifier: "STARTS_FOO",
     initable: false,
     method: (x: string) => x.startsWith("foo"),
-  }) as FinalValidatorTypes;
+  });
 
   const CONTAINS_BAR = validator({
     identifier: "CONTAINS_BAR",
     initable: false,
     method: (x: string) => /bar/.test(x),
-  }) as FinalValidatorTypes;
+  });
 
   const ENDS_BAZ = validator({
     identifier: "ENDS_BAZ",
     initable: false,
     method: (x: string) => x.endsWith("baz"),
-  }) as FinalValidatorTypes;
+  });
 
   it("only calls onChange on completed when passed validators are an empty array.", async () => {
     expect.assertions(2);
