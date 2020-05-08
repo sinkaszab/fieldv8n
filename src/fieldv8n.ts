@@ -3,6 +3,7 @@ export { default as create } from "./create";
 export { default as run } from "./run";
 export type { ValidationRunnerOptions } from "./run";
 export * from "./check";
+export { default as pickRejected } from "./pickRejected";
 export type {
   ValidationFactory,
   Validation,
