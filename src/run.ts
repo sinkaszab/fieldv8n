@@ -1,12 +1,14 @@
 import { ValidationFactory, EventCallback, VALIDATE } from "./shared";
 
+export interface ValidationRunnerOptions {
+  validation: ValidationFactory;
+  value: any;
+  onChange: EventCallback;
+  onlyOnCompleted?: boolean;
+}
+
 interface ValidationRunner {
-  (options: {
-    validation: ValidationFactory;
-    value: any;
-    onChange: EventCallback;
-    onlyOnCompleted?: boolean;
-  }): void;
+  (options: ValidationRunnerOptions): void;
 }
 
 const run: ValidationRunner = ({
