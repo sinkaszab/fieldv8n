@@ -6,6 +6,7 @@
   "scripts": {
     "build": "rm -rf dist; tsc",
     "test": "jest --coverage --watchAll",
+    "test:clear-cache": "jest --clearCache",
     "lint": "eslint --fix . && echo 'Lint complete.'",
     "prettier-check": "prettier --check src/**/*.js",
     "prettier": "prettier --write src/**/*.js"
