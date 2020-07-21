@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
-    "target": "es2017",
-    "module": "es6",
+    "target": "es6",
+    "module": "commonjs",
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
     "outDir": "dist",
     "noImplicitAny": true,
@@ -10,7 +11,8 @@
     "preserveConstEnums": true,
     "declaration": true,
     "strict": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "lib": ["ESNext", "ESNext.Array"]
   },
   "exclude": ["node_modules", "src/**/*.test.ts", "src/testUtils.ts"],
   "include": ["src/**/*"]
