@@ -1,6 +1,10 @@
-import { validator } from "./fieldv8n";
+import {
+  validator,
+  InitableValidator,
+  ValidatorConfig,
+  FinalValidator,
+} from "./fieldv8n";
 import { MethodNeedsToBeAFunction, InvalidIdentifierStyle } from "./exceptions";
-import { InitableValidator, ValidatorConfig, FinalValidator } from "./shared";
 
 describe("Creating a validator from config", () => {
   it("throws when identifier styleguide is not followed.", () => {
