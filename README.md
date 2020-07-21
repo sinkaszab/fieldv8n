@@ -1,5 +1,9 @@
 # Field Validation - fieldv8n
 
+## BREAKING CHANGE
+
+**Version 0.2.0 introduces a breaking change.**
+
 ## Why did I need an N+1 solution?
 
 When searching for form validators, most solutions focused on Object schema
@@ -72,13 +76,13 @@ Build-up your validations incrementally.
 
 **A very basic example how to validate an email address:**
 
-1. `containsAtChar`: On error, inform the user she/he missed to include "@".
-2. `domainContainsDot`: On error, inform the user that the missing dot character
+1. `CONTAINS_AT_CHAR`: On error, inform the user she/he missed to include "@".
+2. `DOMAIN_CONTAINS_DOT`: On error, inform the user that the missing dot character
    let's us guess she/he mistyped the domain part.
-3. `noIllegalCharacterInName`: On error, inform user about characters that need
+3. `NO_ILLEGAL_CHARACTER_IN_NAME`: On error, inform user about characters that need
    to be removed form the part before the "@".
-4. `noIllegalCharacterInDomain`: On error, inform user about characters that need
-   to be removed form the part after the "@".
+4. `NO_ILLEGAL_CHARACTER_IN_DOMAIN`: On error, inform user about characters that
+   need to be removed form the part after the "@".
 
 **What not to validate?**
 
@@ -121,24 +125,16 @@ IMHO a successful software should resemble to `*nix` functions like `grep`.
 It's small, it has one task which it does well. It only needs little
 maintenance, it shall be long-lived and rewrite is a clear sign of failure here.
 
+(Maybe a total rewrite before reaching 1.0.0 can be acceptable 😅. TypeScript
+was chosen for the rewrite to comply with trends therefore to be able to reach
+a wider audience.)
+
 ## Install
 
-`fieldv8n` package comes in 3 different flavors, bundled by Rollup:
+`fieldv8n` package is compiled with TypeScript, type definitions are included.
 
-- ES module
-- CommonJS module
-- IIFE module
-
-Import Common.js style:
-
-```js
-const { make, registerValidator } = require("fieldv8n");
-```
-
-ES Module style import:
-
-```js
-import { make, registerValidator } from "fieldv8n";
+```sh
+npm i -P fieldv8n
 ```
 
 ## Usage
@@ -147,162 +143,64 @@ Using `fieldv8n` is fairly easy. It only has a handful concepts to be understood
 
 - `fieldv8n` is just a framework for running input field validations, as a
   consequence it doesn't offer any built-in validator functions. Just as test
-  frameworks offer no test cases for your code.
+  frameworks don't offer no test cases for your code.
 - You create a validation chain by composing standalone validator functions. Standalone
   validator functions should describe one property of the validated input value.
-- You can fork a validation chain before it's evaluated to extend it. This works
-  similar to the class design with inheritance pattern.
 - Validators can work directly with the input value or be set to accept an initial
   configuration value.
 
-### Register a simple validator
+### Validator
 
-```js
-registerValidator({
-  name: "atCharPresent",
-  type: "HAS_ONE_AT_CHAR",
-  method: email => email.match(/@/g).length === 1,
-});
-```
+A validator contains the domain logic for a property of the to be validated value.
+You create a validator by passing a config object to `fieldv8n.validator`.
 
-`name: String`: Prefer using valid JavaScript property naming. You will use this
-to refer to your validator in the validation chain.
+- A validator needs a name, called `identifier`. An identifier must be all caps,
+  can contain underscore, but cannot start or end with and underscore.
+  Identifier is a `string`.
+- You explicitly have to tell whether this is an initable validator by
+  providing the `initable` property.
+- Last you need to add an initable or non-initable of your choice `method`.
+  If your validator is initable, your method needs to return a function
+  on the first call and then accept an input value. **It doesn't matter whether
+  the validation takes place synchronously or asynchronously, it will be evaluated
+  asynchronously anyway (by the runner).**
 
-`type: any`: Validation result will refer to this. You will use this when you
-create your validation message to be displayed to the user. Think of Redux
-reducer action types.
+```ts
+import { validator } from "./fieldv8n";
+// import { FinalValidator, InitableValidator } from "./fieldv8n";
 
-`method: Function`: A unary function whose return value will be used to make a
-"boolean" decision for the validation result. A falsy result will make the
-validation chain raise a validation error on the failing validator type.
+const IS_BAZ = validator({
+  identifier: "IS_BAZ",
+  initable: false,
+  method: (x: string) => x === "baz",
+}); // as FinalValidator
 
-### Register an initable validator
-
-```js
-registerValidator({
-  name: "maxCharacters",
-  type: "CHAR_LIMIT",
-  method: n => str => str.length <= n,
+const CONTAINS = validator({
+  identifier: "CONTAINS",
   initable: true,
+  method: (a: string) => (b: string): boolean => new RegExp(a).test(b),
+}); // as InitableValidator
+```
+
+#### Unit test
+
+You can easily unit test your validators. You call `VALIDATOR#validate` or
+`VALIDATOR#init` then `VALIDATOR#validate` depending on initable type.
+
+```js
+test("your validators", () => {
+  expect(IS_BAZ.validate("foo")).toBe(false);
+
+  const CONTAINS_FOO = CONTAINS.init("foo");
+  expect(CONTAINS_FOO.validate("foobar").toBe(true);
 });
 ```
 
-`initable: Bool|any`: When truthy, the validator will be handled as initializable
-and you can set an initializer value for the validator in the validation chain
-to work with on the to be validated value.
-
-`method: Function`: On the first invocation your method must accept an initializer
-value and return another unary function that accepts the value to be validated.
-
-### Compose a validation chain
-
-```js
-// Returns a fieldv8n instance:
-const newInstance = make();
-
-// Start a composition of validators:
-const newChain = newInstance.compose();
-
-// Attach validators to the composition:
-const validation = newChain
-  .onlyLetters // You have to register this validator before using it.
-  .allUpperCase // This is the `name` property of the registered validator.
-  .maxChars(256) // Call an initable validator.
-  .noRepeatingLetter;
-
-// Run validation inside an async function:
-try {
-  await validation.validate();
-  // Run effect to display input value was valid.
-  displayInputIsValid();
-} catch (error) {
-  // Run effect to display input value failed validation.
-  displayInputIsInvalid(error.type, error.value);
-}
-```
-
-#### A more real-life example
-
-```js
-// Create a validation chain:
-const emailValidation = make()
-  .compose()
-  .containsAtChar
-  .containsDotInDomain
-  .noIllegalCharacter
-```
-
-```js
-// Use with async/await construct:
-const validateEmail = (onInvalid, onValid) => async emailAddress => {
-  try {
-    const validData = await emailValidation.validate(emailAddress);
-    onValid(validData);
-  } catch (invalidData) {
-    onInvalid(invalidData);
-  }
-};
-```
-
-```js
-// Use with Promise chaining:
-const validateEmail = (onInvalid, onValid) => emailAddress =>
-  emailValidation.validate(emailAddress)
-    .then(validData => onValid(validData))
-    .catch(invalidData => onInvalid(invalidData));
-```
-
-**Shape of ValidData and InvalidData:**
-
-```js
-// Shape of valid validation result:
-const validData = {
-  value: "hello@hello.com", // Input field value.
-  type: "NO_ILLEGAL_CHAR", // Type of the last validator in the chain.
-  history: [
-    "IS_VALUE",
-    "CONTAINS_AT_CHAR",
-    "CONTAINS_DOT_IN_DOMAIN",
-  ], // Rest valid validator types in order of validation.
-};
-
-// Shape of invalid validation result:
-const invalidData = {
-  value: "hello@hellocom",
-  type: "CONTAINS_DOT_IN_DOMAIN", // Type of the invalid validator.
-  history: [
-    "IS_VALUE",
-    "CONTAINS_AT_CHAR",
-  ],
-  error: InvalidData|ValidatorRuntimeError, // Extends Error.
-  runtimeError: Error, // Optional, the Error thrown by bad validator method.
-};
-```
-
-### Fork validation chain
-
-You can fork and extend a validation by calling `.compose()` on an existing
-chain. When forking, the source will stay intact, further validators can be
-attached which will not be inherited by the previously forked validation chain.
-However instead attaching new validators to the source of the fork, forking one
-more time is the preferred solution.
-
-```js
-const evenIntValidation = make()
-  .compose()
-  .isInteger
-  .isEven;
-
-const evensInRangeValidation = evenIntValidation
-  .compose()
-  .greaterThan(50)
-  .lessThan(100);
-
-evenIntValidation.validate(20); // valid
-evensInRangeValidation.validate(20) // invalid
-```
+TODO: Extend with remaining methods.
 
 ## Error (exception) handling
+
+TODO: Add back examples and rewise Exception handling section.
 
 Exception handling is a sensitive topic. However here I think directing both
 validation and runtime errors thrown during `.validate()` to a different branch
@@ -315,20 +213,6 @@ failing, the most important thing is to notify the user about the failure,
 however inconvenient it might be that she/he can never input a valid value.
 
 Runtime errors should be sent to a tracking service.
-
-```js
-const validateEmail = (onInvalid, onValid) => async emailAddress => {
-  try {
-    const validData = await emailValidation.validate(emailAddress);
-    onValid(validData);
-  } catch (invalidData) {
-    if (invalidData.runtimeError) {
-      logRuntimeError(invalidData);
-    }
-    onInvalid(invalidData);
-  }
-};
-```
 
 ## What to avoid?
 
