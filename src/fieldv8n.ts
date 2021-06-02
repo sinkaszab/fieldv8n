@@ -7,6 +7,7 @@ export { default as pickRejected } from "./pickRejected";
 export type {
   ValidationFactory,
   Validation,
+  ValidationState,
   EventCallback,
   NonInitableMethod,
   InitableMethod,
