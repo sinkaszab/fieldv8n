@@ -336,18 +336,17 @@ describe("Create validation", () => {
 
     const onChange = jest.fn();
     const { future, handler } = prepare(onChange);
-    const v8n = create([CONTAINS, CONTAINS, ENDS_BAZ, CONTAINS]).init?.([
+    const v8n = create([CONTAINS, CONTAINS, ENDS_BAZ, CONTAINS]).init([
       ["CONTAINS", ["foo"]],
       ["CONTAINS", ["bar"]],
       ["CONTAINS", ["baz"]],
     ]);
-    if (v8n !== undefined) {
-      v8n[VALIDATE]({
-        value: "foobarbaz",
-        onChange: handler,
-        onlyOnCompleted: true,
-      });
-    }
+
+    v8n[VALIDATE]({
+      value: "foobarbaz",
+      onChange: handler,
+      onlyOnCompleted: true,
+    });
 
     await future;
 
