@@ -52,7 +52,7 @@ my input value validations which requires an asynchronous workflow.
 
 Asynchronous functions are based on synchronous ones, so as a superset most
 possibly will satisfy future needs, so I will not need a workaround or having
-more implementation modes.
+more sync and async modes.
 
 ### No built-in validators
 
@@ -93,21 +93,7 @@ it to your API.
 E.g. don't validate whitespace before and after the email address. Maybe it was
 copy-pasted with the surrounding whitespace. Trim the value.
 
-A harder decision is what to do when you encounter space character inside the
-email address. Maybe the user wanted to type a different character, maybe not.
-A good solution is to make the user verify the email address (by sending
-her/him an verification email, where you also provide option for checking the
-status of the process.) In this case you can safely remove inner whitespaces.
-
-Another way is to make the user review the address before sending the form. That
-way you can separate filling and reading processes for the user, there is a higher
-chance errors will be caught and then provide option to correct the fields.
-Don't make wild guesses and block the user in her/his interaction with a
-doubtful validation error.
-
-You see a "@@@" or ".."? Use marshaling to get rid of multiplicated functional parts.
-You don't see into the user's head. If you would, you didn't need to ask for her/his
-email address. Again reduce to one "@" or "." and make the user verify the data.
+Rule of thumb is to not block the user's workflow when not necessary.
 
 ### Tell, don't ask
 
@@ -121,13 +107,7 @@ email address. Again reduce to one "@" or "." and make the user verify the data.
 
 ### Goal
 
-IMHO a successful software should resemble to `*nix` functions like `grep`.
-It's small, it has one task which it does well. It only needs little
-maintenance, it shall be long-lived and rewrite is a clear sign of failure here.
-
-(Maybe a total rewrite before reaching 1.0.0 can be acceptable 😅. TypeScript
-was chosen for the rewrite to comply with trends therefore to be able to reach
-a wider audience.)
+Formalize my workflow for creating validators and validating field data.
 
 ## Install
 
@@ -151,7 +131,11 @@ Using `fieldv8n` is fairly easy. It only has a handful concepts to be understood
 
 ### Validator
 
-A validator contains the domain logic for a property of the to be validated value.
+A validator contains the domain logic for validating a property of the input value.
+A validator shall not validate the complete input value, just the minimum amount
+of it that you can give a name. Or reversed, we could use Uncle Bob's "extract
+till you drop" philosophy to create a validator that only has one task.
+
 You create a validator by passing a config object to `fieldv8n.validator`.
 
 - A validator needs a name, called `identifier`. An identifier must be all caps,
@@ -164,6 +148,8 @@ You create a validator by passing a config object to `fieldv8n.validator`.
   on the first call and then accept an input value. **It doesn't matter whether
   the validation takes place synchronously or asynchronously, it will be evaluated
   asynchronously anyway (by the runner).**
+- `method` needs to return a literal boolean value or a promise that will
+  resolve to a boolean.
 
 ```ts
 import { validator } from "./fieldv8n";
@@ -184,8 +170,8 @@ const CONTAINS = validator({
 
 #### Unit test
 
-You can easily unit test your validators. You call `VALIDATOR#validate` or
-`VALIDATOR#init` then `VALIDATOR#validate` depending on initable type.
+You can easily unit test your validators. You call `.validate` or
+`.init` then `.validate` depending on initable type.
 
 ```js
 test("your validators", () => {
@@ -194,6 +180,157 @@ test("your validators", () => {
   const CONTAINS_FOO = CONTAINS.init("foo");
   expect(CONTAINS_FOO.validate("foobar").toBe(true);
 });
+```
+
+#### API details
+
+Validators (returned by `validator(config)`) can take 3 shapes:
+
+1. Non-initable
+2. Initable
+3. An initable that was inited.
+
+Transformations:
+
+- validator({...}) -> non-initable
+- validator({...}) -> initable -> inited (non-initable)
+
+**Common interface:**
+
+- Returns the identifier by `.type`.
+- You can ask whether it's initable with `.isInitable`.
+
+**Initable interface:**
+
+- `.wasInited` returns false.
+- `.init` call allows to transform validator to inited state. (Returns a new object.)
+
+**Inited interface:**
+
+- Call `.validate` with the value you would like to validate.
+- `.initParams` returns the array of arguments given to `.init` in the previous stage.
+- `.wasInited` returns true.
+- Caution: `.isInitable` returns true!
+
+**Non-initable:**
+
+- Call `.validate` with the value you would like to validate.
+
+## Composing validators
+
+You create a composition of validators by passing validator objects to `fieldv8n.create`.
+
+You can either pass non-initable, initable or inited validators to `fieldv8n.create`,
+because it let's you defer the initialization phase of a validator to after the
+`create` call.
+
+**Using non-initable validators:**
+
+```js
+import { create, validator } from "./fieldv8n";
+
+const STARTS_FOO = validator({
+  identifier: "STARTS_FOO",
+  initable: false,
+  method: (x: string) => x.startsWith("foo"),
+});
+
+const ENDS_BAZ = validator({
+  identifier: "ENDS_BAZ",
+  initable: false,
+  method: (x: string) => x.endsWith("baz"),
+});
+
+const FOO_STAR_BAZ = create([STARTS_FOO, ENDS_BAZ]);
+```
+
+**Using initable validators:**
+
+When creating a composition of initable validators or the composition contains
+one, you can init the resulting validator.
+
+- Init is idempotent and pure.
+- When a composition consists of only non-initable validators, it behaves as
+  identity function.
+
+`init` accepts an array of tuples, where the length of the array must match the
+number of initable validators.
+
+A tuple's first member is the validator's identifier, and the second member is
+the array of arguments the validator's init function awaits.
+
+```js
+import { create, validator } from "./fieldv8n";
+
+const STARTS_WITH = validator({
+  identifier: "STARTS_WITH",
+  initable: true,
+  method: (y: string) => (x: string) => x.startsWith(y),
+});
+
+const CONTAINS = validator({
+  identifier: "CONTAINS",
+  initable: true,
+  method: (a: string) => (b: string): boolean => new RegExp(a).test(b),
+});
+
+const ENDS_WITH = validator({
+  identifier: "ENDS_WITH",
+  initable: true,
+  method: (y: string) => (x: string) => x.endsWith(y),
+});
+
+const initable = create([STARTS_WITH, CONTAINS, ENDS_WITH]);
+
+initable.types // ["STARTS_WITH", "CONTAINS", "ENDS_WITH"]
+initable.isInitable // true
+
+const FOO_BAR_BAZ = initable.init([
+  ["STARTS_WITH", ["foo"]],
+  ["CONTAINS", ["bar"]],
+  ["ENDS_WITH", ["baz"]],
+]);
+
+FOO_BAR_BAZ.types // ["STARTS_WITH", "CONTAINS", "ENDS_WITH"]
+FOO_BAR_BAZ.isInitable // false
+```
+
+## Validation
+
+Composed validators are not directly runnable. You need the `fieldv8n.run` function.
+It will validate the members of the validator composition one-by-one (iterates over
+array of validators from the first element to last).
+
+`fieldv8n.run` needs a handler to be passed which is called at each stage of
+the validation process or only once when validation process is finished.
+
+```js
+import { run, create, validator } from "./fieldv8n";
+
+const STARTS_FOO = validator({
+  identifier: "STARTS_FOO",
+  initable: false,
+  method: (x: string) => x.startsWith("foo"),
+});
+
+const ENDS_BAZ = validator({
+  identifier: "ENDS_BAZ",
+  initable: false,
+  method: (x: string) => x.endsWith("baz"),
+});
+
+const FOO_STAR_BAZ = create([STARTS_FOO, ENDS_BAZ]);
+
+const handler: EventCallback = (result, done) => {
+  console.log({ result, done });
+};
+
+run({
+  validation: FOO_STAR_BAZ,
+  value: "foobarbaz",
+  onChange: handler,
+  onlyOnCompleted: true, // optional parameter
+})
 ```
 
 TODO: Extend with remaining methods.
