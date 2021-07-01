@@ -76,7 +76,7 @@ Build-up your validations incrementally.
 
 **A very basic example how to validate an email address:**
 
-1. `CONTAINS_AT_CHAR`: On error, inform the user she/he missed to include "@".
+1. `CONTAINS_AT_CHAR`: On error, inform the user missed to include "@".
 2. `DOMAIN_CONTAINS_DOT`: On error, inform the user that the missing dot character
    let's us guess she/he mistyped the domain part.
 3. `NO_ILLEGAL_CHARACTER_IN_NAME`: On error, inform user about characters that need
@@ -91,7 +91,7 @@ away or escaped by some simple operations before validating the data or sending
 it to your API.
 
 E.g. don't validate whitespace before and after the email address. Maybe it was
-copy-pasted with the surrounding whitespace. Trim the value.
+copy-pasted with the surrounding whitespace. Trim the value instead.
 
 Rule of thumb is to not block the user's workflow when not necessary.
 
@@ -100,10 +100,8 @@ Rule of thumb is to not block the user's workflow when not necessary.
 - You can use an input field without a form tag and still create meaningful functionality.
 - A form's role is to send data on user inducted submission as defined by its `method`
   and `action` attributes.
-- The form shouldn't care how to validate a field.
-- An input field should tell the form if it can send the data.
-- An input field shouldn't care when the data is sent. Only tell what is the
-  status of the data to be sent.
+- The form shouldn't care how to validate a field, only check if all fields report a valid state on send trial.
+- A field should tell the form its state of validity and not care about form actions.
 
 ### Goal
 
@@ -129,6 +127,8 @@ Using `fieldv8n` is fairly easy. It only has a handful concepts to be understood
 - Validators can work directly with the input value or be set to accept an initial
   configuration value.
 
+**Warning: The following examples overuse TypeScript features to expose package details.**
+
 ### Validator
 
 A validator contains the domain logic for validating a property of the input value.
@@ -136,13 +136,46 @@ A validator shall not validate the complete input value, just the minimum amount
 of it that you can give a name. Or reversed, we could use Uncle Bob's "extract
 till you drop" philosophy to create a validator that only has one task.
 
-You create a validator by passing a config object to `fieldv8n.validator`.
+**You create a validator by passing a config object to `fieldv8n.validator`:**
 
-- A validator needs a name, called `identifier`. An identifier must be all caps,
-  can contain underscore, but cannot start or end with and underscore.
-  Identifier is a `string`.
-- You explicitly have to tell whether this is an initable validator by
-  providing the `initable` property.
+```ts
+import { validator, ValidatorConfig, FinalValidator, InitableValidator } from "fieldv8n";
+
+const validatorConfig: ValidatorConfig = {
+  identifier: "IS_EVEN",
+  method: n => !!(n % 2),
+  initable: false,
+};
+
+const IS_EVEN: FinalValidator = validator(validatorConfig);
+
+const initableValidatorConfig: ValidatorConfig = {
+  identifier: "DIVISIBLE_BY",
+  method: m => n => !!(n % m),
+  initable: false,
+};
+
+const DIVISIBLE_BY: InitableValidator = validator(initableValidatorConfig);
+```
+
+#### ValidatorConfig properties
+
+`identifier`:
+
+A validator needs a name. An identifier must be all caps, can contain underscore,
+but cannot start or end with and underscore.
+
+`initable`:
+
+You need to tell explicitly whether this is an initable validator by providing the property.
+
+`method`:
+
+```ts
+type NonInitableMethod = (fieldValue: any) => boolean | Promise<boolean>;
+type InitableMethod = (...params: any[]) => NonInitableMethod;
+```
+
 - Last you need to add an initable or non-initable of your choice `method`.
   If your validator is initable, your method needs to return a function
   on the first call and then accept an input value. **It doesn't matter whether
@@ -182,18 +215,25 @@ test("your validators", () => {
 });
 ```
 
-#### API details
+#### API
 
-Validators (returned by `validator(config)`) can take 3 shapes:
+**Transformations:**
 
-1. Non-initable
-2. Initable
-3. An initable that was inited.
+```ts
+// Warning: Invalid TypeScript!
+import {
+  validator,
+  ValidatorConfig,
+  FinalValidator,
+  InitableValidator
+} from "./fieldv8n";
 
-Transformations:
+// Non-initable:
+validator(ValidatorConfig) -> FinalValidator
 
-- validator({...}) -> non-initable
-- validator({...}) -> initable -> inited (non-initable)
+// Initable:
+validator(Validatorconfig) -> InitableValidator.init(Any) -> FinalValidator
+```
 
 **Common interface:**
 
