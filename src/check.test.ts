@@ -1,10 +1,12 @@
 import { check, Outcome } from "./fieldv8n";
-import { ValidationState } from "./shared";
+import { Validation, ValidationState } from "./shared";
 import { OutComeTypeNotImplemented } from "./exceptions";
 
 describe("Check identifies validations", () => {
   it("as accepted when all member was accepted.", () => {
-    expect.assertions(2);
+    expect.assertions(3);
+
+    const v8nEmpty: Validation[] = [];
 
     const v8nsPass = [
       { type: "A", state: ValidationState.Accepted },
@@ -18,12 +20,15 @@ describe("Check identifies validations", () => {
       { type: "C", state: ValidationState.Pending },
     ];
 
+    expect(check(v8nEmpty, Outcome.Accepted)).toBe(false);
     expect(check(v8nsPass, Outcome.Accepted)).toBe(true);
     expect(check(v8nsFail, Outcome.Accepted)).toBe(false);
   });
 
   it("as rejected when one member was rejected.", () => {
-    expect.assertions(2);
+    expect.assertions(3);
+
+    const v8nEmpty: Validation[] = [];
 
     const v8nsPass = [
       { type: "A", state: ValidationState.Accepted },
@@ -37,12 +42,15 @@ describe("Check identifies validations", () => {
       { type: "C", state: ValidationState.Pending },
     ];
 
+    expect(check(v8nEmpty, Outcome.Rejected)).toBe(true);
     expect(check(v8nsPass, Outcome.Rejected)).toBe(true);
     expect(check(v8nsFail, Outcome.Rejected)).toBe(false);
   });
 
   it("as runtime error when one member has a truthy runtimeError key.", () => {
-    expect.assertions(2);
+    expect.assertions(3);
+
+    const v8nEmpty: Validation[] = [];
 
     const v8nsPass = [
       { type: "A", state: ValidationState.Accepted },
@@ -56,6 +64,7 @@ describe("Check identifies validations", () => {
       { type: "C", state: ValidationState.Canceled },
     ];
 
+    expect(check(v8nEmpty, Outcome.RuntimeError)).toBe(false);
     expect(check(v8nsPass, Outcome.RuntimeError)).toBe(true);
     expect(check(v8nsFail, Outcome.RuntimeError)).toBe(false);
   });

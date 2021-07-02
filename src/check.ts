@@ -12,6 +12,16 @@ interface ResultCheck {
 }
 
 export const check: ResultCheck = (validations, testAgainst) => {
+  const isEmpty = !validations.length;
+
+  if (isEmpty && testAgainst === Outcome.Rejected) {
+    return true;
+  }
+
+  if (isEmpty) {
+    return false;
+  }
+
   switch (testAgainst) {
     case Outcome.Rejected: {
       return validations.some(
