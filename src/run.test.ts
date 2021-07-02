@@ -1,4 +1,4 @@
-import { validator, create, run } from "./fieldv8n";
+import { validator, create, run, ValidationState } from "./fieldv8n";
 import { prepare } from "./testUtils";
 import { FinalValidatorTypes } from "./shared";
 import { CalledValidateOnInitable } from "./exceptions";
@@ -47,9 +47,9 @@ describe("Run", () => {
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenCalledWith(
       [
-        { type: "STARTS_FOO", state: "ACCEPTED" },
-        { type: "CONTAINS_BAR", state: "ACCEPTED" },
-        { type: "ENDS_BAZ", state: "ACCEPTED" },
+        { type: "STARTS_FOO", state: ValidationState.Accepted },
+        { type: "CONTAINS_BAR", state: ValidationState.Accepted },
+        { type: "ENDS_BAZ", state: ValidationState.Accepted },
       ],
       true,
     );
@@ -72,72 +72,72 @@ describe("Run", () => {
     expect(onChange).toHaveBeenNthCalledWith(
       1,
       [
-        { type: "STARTS_FOO", state: "PENDING" },
-        { type: "CONTAINS_BAR", state: "PENDING" },
-        { type: "ENDS_BAZ", state: "PENDING" },
+        { type: "STARTS_FOO", state: ValidationState.Pending },
+        { type: "CONTAINS_BAR", state: ValidationState.Pending },
+        { type: "ENDS_BAZ", state: ValidationState.Pending },
       ],
       false,
     );
     expect(onChange).toHaveBeenNthCalledWith(
       2,
       [
-        { type: "STARTS_FOO", state: "VALIDATING" },
-        { type: "CONTAINS_BAR", state: "PENDING" },
-        { type: "ENDS_BAZ", state: "PENDING" },
+        { type: "STARTS_FOO", state: ValidationState.Validating },
+        { type: "CONTAINS_BAR", state: ValidationState.Pending },
+        { type: "ENDS_BAZ", state: ValidationState.Pending },
       ],
       false,
     );
     expect(onChange).toHaveBeenNthCalledWith(
       3,
       [
-        { type: "STARTS_FOO", state: "ACCEPTED" },
-        { type: "CONTAINS_BAR", state: "PENDING" },
-        { type: "ENDS_BAZ", state: "PENDING" },
+        { type: "STARTS_FOO", state: ValidationState.Accepted },
+        { type: "CONTAINS_BAR", state: ValidationState.Pending },
+        { type: "ENDS_BAZ", state: ValidationState.Pending },
       ],
       false,
     );
     expect(onChange).toHaveBeenNthCalledWith(
       4,
       [
-        { type: "STARTS_FOO", state: "ACCEPTED" },
-        { type: "CONTAINS_BAR", state: "VALIDATING" },
-        { type: "ENDS_BAZ", state: "PENDING" },
+        { type: "STARTS_FOO", state: ValidationState.Accepted },
+        { type: "CONTAINS_BAR", state: ValidationState.Validating },
+        { type: "ENDS_BAZ", state: ValidationState.Pending },
       ],
       false,
     );
     expect(onChange).toHaveBeenNthCalledWith(
       5,
       [
-        { type: "STARTS_FOO", state: "ACCEPTED" },
-        { type: "CONTAINS_BAR", state: "ACCEPTED" },
-        { type: "ENDS_BAZ", state: "PENDING" },
+        { type: "STARTS_FOO", state: ValidationState.Accepted },
+        { type: "CONTAINS_BAR", state: ValidationState.Accepted },
+        { type: "ENDS_BAZ", state: ValidationState.Pending },
       ],
       false,
     );
     expect(onChange).toHaveBeenNthCalledWith(
       6,
       [
-        { type: "STARTS_FOO", state: "ACCEPTED" },
-        { type: "CONTAINS_BAR", state: "ACCEPTED" },
-        { type: "ENDS_BAZ", state: "VALIDATING" },
+        { type: "STARTS_FOO", state: ValidationState.Accepted },
+        { type: "CONTAINS_BAR", state: ValidationState.Accepted },
+        { type: "ENDS_BAZ", state: ValidationState.Validating },
       ],
       false,
     );
     expect(onChange).toHaveBeenNthCalledWith(
       7,
       [
-        { type: "STARTS_FOO", state: "ACCEPTED" },
-        { type: "CONTAINS_BAR", state: "ACCEPTED" },
-        { type: "ENDS_BAZ", state: "ACCEPTED" },
+        { type: "STARTS_FOO", state: ValidationState.Accepted },
+        { type: "CONTAINS_BAR", state: ValidationState.Accepted },
+        { type: "ENDS_BAZ", state: ValidationState.Accepted },
       ],
       false,
     );
     expect(onChange).toHaveBeenNthCalledWith(
       8,
       [
-        { type: "STARTS_FOO", state: "ACCEPTED" },
-        { type: "CONTAINS_BAR", state: "ACCEPTED" },
-        { type: "ENDS_BAZ", state: "ACCEPTED" },
+        { type: "STARTS_FOO", state: ValidationState.Accepted },
+        { type: "CONTAINS_BAR", state: ValidationState.Accepted },
+        { type: "ENDS_BAZ", state: ValidationState.Accepted },
       ],
       true,
     );

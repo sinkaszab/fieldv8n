@@ -2,9 +2,9 @@ import { Validation, ValidationState } from "./shared";
 import { OutComeTypeNotImplemented } from "./exceptions";
 
 export enum Outcome {
-  Rejected = "rejected",
-  Accepted = "accepted",
-  RuntimeError = "runtime_error",
+  Rejected = "@@outcome/rejected",
+  Accepted = "@@outcome/accepted",
+  RuntimeError = "@@outcome/runtime_error",
 }
 
 interface ResultCheck {

@@ -1,11 +1,11 @@
 export const VALIDATE = Symbol("validate");
 
 export enum ValidationState {
-  Pending = "PENDING",
-  Validating = "VALIDATING",
-  Accepted = "ACCEPTED",
-  Rejected = "REJECTED",
-  Canceled = "CANCELED",
+  Pending = "@@validation-state/pending",
+  Validating = "@@validation-state/validating",
+  Accepted = "@@validation-state/accepted",
+  Rejected = "@@validation-state/rejected",
+  Canceled = "@@validation-state/canceled",
 }
 
 export type NonInitableMethod = (fieldValue: any) => boolean | Promise<boolean>;
